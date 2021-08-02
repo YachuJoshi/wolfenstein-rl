@@ -12,21 +12,21 @@ clock = pygame.time.Clock()
 # map
 MAP_SCALE = 5
 MAP_SPEED = (MAP_SCALE / 2) / 10
-MAP_SIZE = 20
-'''
-MAP = (
-    '########'
-    '#      #'
-    '#      #'
-    '#      #'
-    '#      #'
-    '#      #'
-    '#      #'
-    '########'
-)
-'''
+MAP_SIZE = 8
 
 MAP = (
+    '########'
+    '#      #'
+    '#      #'
+    '# ##   #'
+    '#      #'
+    '#      #'
+    '#      #'
+    '########'
+)
+
+'''
+MAP = (
     '####################'
     '#                  #'
     '#                  #'
@@ -48,6 +48,7 @@ MAP = (
     '#                  #'
     '####################'
 )
+'''
 
 
 # player coordinates and view angle
@@ -60,23 +61,21 @@ while True:
     # get user input
     pygame.event.get()
     keys = pygame.key.get_pressed()
-        
+    
+    # player move offset
+    offset_x = sin(player_angle) * MAP_SPEED
+    offset_y = cos(player_angle) * MAP_SPEED
+
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
     if keys[pygame.K_LEFT]: player_angle += 0.1
     if keys[pygame.K_RIGHT]: player_angle -= 0.1
     if keys[pygame.K_UP]:
-        # move offset & collision detection
-        offset_x = sin(player_angle) * MAP_SPEED
-        offset_y = cos(player_angle) * MAP_SPEED
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x) / MAP_SCALE)
         target_y = int((player_y + offset_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x += offset_x
         if MAP[target_y] == ' ': player_y += offset_y
     if keys[pygame.K_DOWN]:
-        # move offset & collision detection
-        offset_x = sin(player_angle) * MAP_SPEED
-        offset_y = cos(player_angle) * MAP_SPEED
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x - offset_x) / MAP_SCALE)
         target_y = int((player_y - offset_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x -= offset_x
