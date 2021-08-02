@@ -3,14 +3,19 @@ from math import sin, cos, pi
 import pygame
 import sys
 
+# screen
+WIDTH = 320
+HEIGHT = 240
+FOV = pi / 3
+
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((320, 200), pygame.FULLSCREEN)
+window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 # map
-MAP_SCALE = 5
+MAP_SCALE = 15
 MAP_SPEED = (MAP_SCALE / 2) / 10
 MAP_SIZE = 8
 
@@ -18,7 +23,7 @@ MAP = (
     '########'
     '#      #'
     '#      #'
-    '# ##   #'
+    '#      #'
     '#      #'
     '#      #'
     '#      #'
@@ -93,6 +98,23 @@ while True:
     pygame.draw.circle(window, (255, 0, 0), (int(player_x), int(player_y)), 2)
     pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
                     (player_x + sin(player_angle) * 5, player_y + cos(player_angle) * 5), 1)
+    pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
+                    (player_x + sin(player_angle - (FOV / 2)) * 20, player_y + cos(player_angle - (FOV / 2)) * 20), 1)
+    pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
+                    (player_x + sin(player_angle + (FOV / 2)) * 20, player_y + cos(player_angle + (FOV / 2)) * 20), 1)
+    
+    # ray casting (Bresenham's line algorithm)
+    current_angle = player_angle - (FOV / 2)
+    for ray in range(WIDTH):    
+        current_sin = sin(current_angle); current_sin = current_sin if current_sin else 0.000001
+        current_cos = cos(current_angle); current_cos = current_cos if current_cos else 0.000001
+        
+        
+        
+        #pygame.draw.line(window, (0, (255 if y == -180 else 50), 0), (player_x, player_y),
+        #(y, x), 1)
+
+        current_angle += (FOV / WIDTH)
     
     # fps
     clock.tick(60)
