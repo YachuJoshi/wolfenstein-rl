@@ -22,7 +22,7 @@ MAP_SIZE = 8
 MAP = (
     '########'
     '#      #'
-    '#  #   #'
+    '#  ### #'
     '#  #   #'
     '#  #   #'
     '#      #'
@@ -90,18 +90,15 @@ while True:
     window.fill((100, 100, 100))
     
     # draw map (debug)
+    pygame.draw.rect(window, (0, 0, 0), (0, 0, MAP_SIZE * MAP_SCALE, MAP_SIZE * MAP_SCALE))
     for row in range(MAP_SIZE):
         for col in range(MAP_SIZE):
             pygame.draw.rect(window,
-            (50, 50, 50) if MAP[row * MAP_SIZE + col] != ' ' else (0, 0, 0),
+            (0, 255, 0) if MAP[row * MAP_SIZE + col] != ' ' else (200, 200, 200),
             (col * MAP_SCALE, row * MAP_SCALE, MAP_SCALE - 1, MAP_SCALE - 1))
     pygame.draw.circle(window, (255, 0, 0), (int(player_x), int(player_y)), 2)
     pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
                     (player_x + sin(player_angle) * 5, player_y + cos(player_angle) * 5), 1)
-    pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
-                    (player_x + sin(player_angle - (FOV / 2)) * 20, player_y + cos(player_angle - (FOV / 2)) * 20), 1)
-    pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
-                    (player_x + sin(player_angle + (FOV / 2)) * 20, player_y + cos(player_angle + (FOV / 2)) * 20), 1)
     
     # ray casting
     current_angle = player_angle# - (FOV / 2)
@@ -109,9 +106,22 @@ while True:
         current_sin = sin(current_angle); current_sin = current_sin if current_sin else 0.000001
         current_cos = cos(current_angle); current_cos = current_cos if current_cos else 0.000001
         
+        # horizontal collision
+        target_y = int(player_y / MAP_SCALE) * MAP_SCALE + (MAP_SCALE if current_cos >= 0 else 0)        
+        for square in range(0, HEIGHT, MAP_SCALE):
+            horizontal_depth = (target_y - player_y) / cos(current_angle)
+            target_x = player_x + horizontal_depth * sin(current_angle)
+            target_square = int(target_y / MAP_SCALE) * MAP_SIZE + int(target_x / MAP_SCALE)
+            if target_square not in range(0, len(MAP)) or MAP[target_square] != ' ': break
+            target_y += MAP_SCALE * (1 if current_cos >= 0 else -1)
+        target_y += (MAP_SCALE if current_cos <= 0 else 0)
+        
+        #pygame.draw.line(window, (255, 0, 0), (player_x, player_y),
+        #(target_x, target_y), 1)
+        
         # vertical collision
         target_x = int(player_x / MAP_SCALE) * MAP_SCALE + (MAP_SCALE if current_sin >= 0 else 0)        
-        for col in range(0, WIDTH, MAP_SCALE):
+        for square in range(0, WIDTH, MAP_SCALE):
             vertical_depth = (target_x - player_x) / sin(current_angle)
             target_y = player_y + vertical_depth * cos(current_angle)
             target_square = int(target_y / MAP_SCALE) * MAP_SIZE + int(target_x / MAP_SCALE)            
@@ -119,17 +129,27 @@ while True:
             target_x += MAP_SCALE * (1 if current_sin >= 0 else -1)
         target_x += (MAP_SCALE if current_sin <= 0 else 0)
         
-        pygame.draw.line(window, (0, 255, 0), (player_x, player_y),
-        (target_x, target_y), 1)
+        #pygame.draw.line(window, (255, 255, 0), (player_x, player_y),
+        #(target_x, target_y), 1)
+
+                
+        # projection
+        depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
+        color = 255 / (1 + depth * 0.00001)
+        depth *= cos(player_angle - current_angle)
+        wall_height = 1000 / (depth + 0.0001)
+        if wall_height > HEIGHT: wall_height = HEIGHT
+        #pygame.draw.rect(window, (color, color, color), 
+        #(ray, (HEIGHT / 2) - wall_height / 2, 1, wall_height))
                 
         current_angle += (FOV / WIDTH)
-    
+
     # fps
-    clock.tick(60)
+    clock.tick(30)
 
     # print FPS to screen
     font = pygame.font.SysFont('Monospace Regular', 30)
-    fps_surface = font.render(str(int(clock.get_fps())), False, (255, 255, 255))
+    fps_surface = font.render(str(int(clock.get_fps())), False, (255, 0, 0))
     window.blit(fps_surface, (296, 0))
 
     # update display
