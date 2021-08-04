@@ -20,10 +20,10 @@ MAP_SCALE = 60
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
 MAP = (
-    'SSSSSSSSSSSSSSSSSSSS'
-    'S                  S'
-    'S                  S'
-    'S                  S'
+    'DDDDDBBBBBBBBDDDDSSS'
+    'D               D  S'
+    'D   DBBBBBBBBDD D  S'
+    'DDDDD              S'
     'S                  S'
     'S        FBBBBB    S'
     'S             B    S'
@@ -51,10 +51,12 @@ player_angle = pi / 3
 
 # textures
 background = pygame.image.load('images/background.png').convert()
+dr_pi = pygame.image.load('images/dr_pi.png').convert()
 walls = pygame.image.load('images/walls.png').convert()
 textures = {
     'S': walls.subsurface(0, 0, 64, 64),
-    'F': walls.subsurface(4 * 64, 0, 64, 64),
+    'D': walls.subsurface(64, 0, 64, 64),
+    'F': dr_pi,#walls.subsurface(4 * 64, 0, 64, 64),
     'B': walls.subsurface(2 * 64, 5 * 64, 64, 64)
 }
 
@@ -138,7 +140,7 @@ while True:
         # 3D projection
         
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
-        texture = texture_y if vertical_depth < horizontal_depth else texture_x
+        texture = texture_y if vertical_depth < horizontal_depth else 'B'#texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
         color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
@@ -146,7 +148,6 @@ while True:
         if wall_height > 50000: wall_height = 50000;
         
         # textures
-        #wall_block = textures['S'].subsurface(0, 0, 1, 64)
         wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
         wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
         window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
