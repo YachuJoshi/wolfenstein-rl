@@ -5,7 +5,7 @@ import sys
 
 # screen
 WIDTH = 320
-HEIGHT = 240
+HEIGHT = 200
 FOV = pi / 3
 
 # init pygame
@@ -24,7 +24,7 @@ MAP = (
     'SSSSSSSS'
     'S      S'
     'F  B   F'
-    'S  B   S'
+    'S      S'
     'S  B   S'
     'F      F'
     'S      S'
@@ -63,6 +63,7 @@ player_y = MAP_SCALE + 20.0
 player_angle = pi / 3
 
 # textures
+background = pygame.image.load('images/background.png').convert()
 walls = pygame.image.load('images/walls.png').convert()
 textures = {
     'S': walls.subsurface(0, 0, 64, 64),
@@ -79,8 +80,8 @@ while True:
     # player move offset
     offset_x = sin(player_angle) * MAP_SPEED
     offset_y = cos(player_angle) * MAP_SPEED
-    distance_thresh_x = 20 if offset_x > 0 else -20
-    distance_thresh_y = 20 if offset_y > 0 else -20
+    distance_thresh_x = 10 if offset_x > 0 else -10
+    distance_thresh_y = 10 if offset_y > 0 else -10
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
@@ -98,7 +99,8 @@ while True:
         if MAP[target_y] == ' ': player_y -= offset_y
     
     # draw background
-    window.fill((100, 100, 100))
+    window.blit(background, (0, 0))
+    #window.fill((100, 100, 100))
     
     # draw map (debug)
     '''
@@ -136,7 +138,7 @@ while True:
                 break
             target_x += direction_x * MAP_SCALE
         
-        offset_y = target_y
+        texture_offset_y = target_y
 
         # horizontal collision
         target_y, direction_y = (start_y + MAP_SCALE, 1) if current_cos >= 0 else (start_y, -1)
@@ -153,18 +155,19 @@ while True:
                 break
             target_y += direction_y * MAP_SCALE
 
-        offset_x = target_x
+        texture_offset_x = target_x
 
         # 3D projection
-        offset = offset_y if vertical_depth < horizontal_depth else offset_x
+        texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
         texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
         color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
         wall_height = MAP_SCALE * 250 / (depth + 0.0001)
-        if wall_height > 50000: wall_height = 50000
+        if wall_height > 50000: wall_height = 50000;
+        
         # textures
-        wall_block = textures[texture].subsurface( (offset - int(offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
+        wall_block = textures[texture].subsurface( (texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
         wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
         window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
         
