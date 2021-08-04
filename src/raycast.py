@@ -15,43 +15,44 @@ window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FU
 clock = pygame.time.Clock()
 
 # map
-MAP_SCALE = 30
+MAP_SCALE = 60
 MAP_SPEED = (MAP_SCALE / 2) / 10
 MAP_SIZE = 8
 
+
 MAP = (
-    '########'
-    '#      #'
-    '#  #   #'
-    '#  #   #'
-    '#  #   #'
-    '#      #'
-    '#      #'
-    '########'
+    'SSSSSSSS'
+    'S      S'
+    'F  B   F'
+    'S  B   S'
+    'S  B   S'
+    'F      F'
+    'S      S'
+    'SSSSSSSS'
 )
 
-'''20
+'''
 MAP = (
-    '####################'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#    #   #    #    #'
-    '#    #   #    #    #'
-    '#    #   #    #    #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '#                  #'
-    '####################'
+    'SSSSSFSSSSSSSSFSSSSS'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S        FBBBBB    S'
+    'S             B    S'
+    'S    BF  B    B    S'
+    'S    B   B    B    S'
+    'S    B   B    B    S'
+    'S    BBBBBBBB F    S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'S                  S'
+    'SSSSSSSSSSSSSSSSSSSS'
 )
 '''
 
@@ -60,6 +61,14 @@ MAP = (
 player_x = MAP_SCALE + 1.0
 player_y = MAP_SCALE + 1.0
 player_angle = pi / 3
+
+# textures
+walls = pygame.image.load('images/walls.png').convert()
+textures = {
+    'S': walls.subsurface(0, 0, 64, 64),
+    'F': walls.subsurface(4 * 64, 0, 64, 64),
+    'B': walls.subsurface(2 * 64, 5 * 64, 64, 64)
+}
 
 # game loop
 while True:
@@ -70,19 +79,21 @@ while True:
     # player move offset
     offset_x = sin(player_angle) * MAP_SPEED
     offset_y = cos(player_angle) * MAP_SPEED
+    distance_thresh_x = 20 if offset_x > 0 else -20
+    distance_thresh_y = 20 if offset_y > 0 else -20
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
     if keys[pygame.K_LEFT]: player_angle += 0.06
     if keys[pygame.K_RIGHT]: player_angle -= 0.06
     if keys[pygame.K_UP]:
-        target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x) / MAP_SCALE)
-        target_y = int((player_y + offset_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
+        target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
+        target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x += offset_x
         if MAP[target_y] == ' ': player_y += offset_y
     if keys[pygame.K_DOWN]:
-        target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x - offset_x) / MAP_SCALE)
-        target_y = int((player_y - offset_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
+        target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x - offset_x - distance_thresh_x) / MAP_SCALE)
+        target_y = int((player_y - offset_y - distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x -= offset_x
         if MAP[target_y] == ' ': player_y -= offset_y
     
@@ -90,6 +101,7 @@ while True:
     window.fill((100, 100, 100))
     
     # draw map (debug)
+    '''
     pygame.draw.rect(window, (0, 0, 0), (0, 0, MAP_SIZE * MAP_SCALE, MAP_SIZE * MAP_SCALE))
     for row in range(MAP_SIZE):
         for col in range(MAP_SIZE):
@@ -100,7 +112,7 @@ while True:
     pygame.draw.line(window, (255, 0, 0), (player_x, player_y), 
                     (player_x + sin(player_angle) * 5, player_y + cos(player_angle) * 5), 1)
 
-    
+    '''
     # ray casting
     current_angle = player_angle + (FOV / 2)    
     start_x = int(player_x / MAP_SCALE) * MAP_SCALE
@@ -118,14 +130,13 @@ while True:
             map_y = int(target_y / MAP_SCALE)
             if current_sin <= 0: map_x += direction_x
             target_square = map_y * MAP_SIZE + map_x
-            if target_square not in range(len(MAP)) or MAP[target_square] == '#': break
+            if target_square not in range(len(MAP)): break
+            if MAP[target_square] != ' ':
+                texture_y = MAP[target_square]
+                break
             target_x += direction_x * MAP_SCALE
-
-        vx = target_x
-        vy = target_y
-        vd = vertical_depth
-
-        #pygame.draw.line(window, (255, 0, 0), (player_x, player_y), (target_x, target_y), 1)
+        
+        offset_y = target_y
 
         # horizontal collision
         target_y, direction_y = (start_y + MAP_SCALE, 1) if current_cos >= 0 else (start_y, -1)
@@ -136,32 +147,32 @@ while True:
             map_y = int(target_y / MAP_SCALE)
             if current_cos <= 0: map_y += direction_y
             target_square = map_y * MAP_SIZE + map_x
-            if target_square not in range(0, len(MAP)) or MAP[target_square] != ' ': break
+            if target_square not in range(0, len(MAP)): break
+            if MAP[target_square] != ' ':
+                texture_x = MAP[target_square]
+                break
             target_y += direction_y * MAP_SCALE
-        
-        hx = target_x
-        hy = target_y
-        hd = horizontal_depth        
-        
-        #pygame.draw.line(window, (0, 255, 0), (player_x, player_y), (target_x, target_y), 1)
-        
-        min_x = vx if vd < hd else hx
-        min_y = vy if vd < hd else hy
-        #pygame.draw.line(window, (255, 255, 0), (player_x, player_y), (min_x, min_y), 1)
 
-        # projection
+        offset_x = target_x
 
+        # 3D projection
+        offset = offset_y if vertical_depth < horizontal_depth else offset_x
+        texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
         color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
         wall_height = MAP_SCALE * 250 / (depth + 0.0001)
-        if wall_height > HEIGHT: wall_height = HEIGHT
-        pygame.draw.rect(window, (color, color, color), (ray, (HEIGHT / 2) - wall_height / 2, 1, wall_height))
-
+        if wall_height > 50000: wall_height = 50000
+        # textures
+        wall_block = textures[texture].subsurface( (offset - int(offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
+        wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
+        window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
+        
+        # increment angle
         current_angle -= (FOV / WIDTH)
 
     # fps
-    clock.tick(30)
+    clock.tick(60)
 
     # print FPS to screen
     font = pygame.font.SysFont('Monospace Regular', 30)
