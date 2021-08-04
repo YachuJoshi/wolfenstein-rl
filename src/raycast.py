@@ -102,7 +102,7 @@ while True:
 
     
     # ray casting
-    current_angle = player_angle - (FOV / 2)    
+    current_angle = player_angle + (FOV / 2)    
     start_x = int(player_x / MAP_SCALE) * MAP_SCALE
     start_y = int(player_y / MAP_SCALE) * MAP_SCALE
     for ray in range(WIDTH):    
@@ -154,11 +154,11 @@ while True:
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
         color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
-        wall_height = MAP_SCALE * 350 / (depth + 0.0001)
+        wall_height = MAP_SCALE * 250 / (depth + 0.0001)
         if wall_height > HEIGHT: wall_height = HEIGHT
         pygame.draw.rect(window, (color, color, color), (ray, (HEIGHT / 2) - wall_height / 2, 1, wall_height))
 
-        current_angle += (FOV / WIDTH)
+        current_angle -= (FOV / WIDTH)
 
     # fps
     clock.tick(30)
