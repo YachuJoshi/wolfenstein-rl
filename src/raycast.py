@@ -58,8 +58,8 @@ MAP = (
 
 
 # player coordinates and view angle
-player_x = MAP_SCALE + 1.0
-player_y = MAP_SCALE + 1.0
+player_x = MAP_SCALE + 20.0
+player_y = MAP_SCALE + 20.0
 player_angle = pi / 3
 
 # textures
