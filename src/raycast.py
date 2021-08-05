@@ -15,31 +15,33 @@ window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FU
 clock = pygame.time.Clock()
 
 # map
-MAP_SIZE = 20
+MAP_SIZE = 22
 MAP_SCALE = 60
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
 MAP = (
-    'DDDDDBBBBBBBBDDDDSSS'
-    'D               D  S'
-    'D   DBBBBBBBBDD D  S'
-    'DDDDD              S'
-    'S                  S'
-    'S        FBBBBB    S'
-    'S             B    S'
-    'S    BF  B    B    S'
-    'S    B   B    B    S'
-    'S    B   B    B    S'
-    'S    BBBBBBBB F    S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'S                  S'
-    'SSSSSSSSSSSSSSSSSSSS'
+    'SSSSSSSBBFBBBBBBBBBBBB'
+    'S     SB             B'
+    'S     CB   BBBBBB B  B'
+    'S     SB       WB B  F'
+    'SSSSS SSWWWW   WB BBBB'
+    'S      SW      WB    B'
+    'P      SW      WB    B'
+    'S     BBBBBB   WWBB  B'
+    'C         BB     BB  B'
+    'S  SSSBB  FB     BS  S'
+    'P     SB  BBBBB  BS  S'
+    'S     SB         BS  S'
+    'SSSSSSSBBBBBBBBBBBS  S'
+    'DDDDDDDDDSSSSSSSSSS  S'
+    'D                    S'
+    'D  DDDDDDSSSSS       M'
+    'D  DDXDXDXDDDS       S'
+    'D  D        DS       Y'
+    'D  D        LS       S'
+    'D           RS       M'
+    'D  D        DS       S'
+    'DDDDDXDXDXDDDDSPSCSPSS'
 )
 
 
@@ -51,13 +53,20 @@ player_angle = pi / 3
 
 # textures
 background = pygame.image.load('images/background.png').convert()
-dr_pi = pygame.image.load('images/dr_pi.png').convert()
 walls = pygame.image.load('images/walls.png').convert()
 textures = {
     'S': walls.subsurface(0, 0, 64, 64),
-    'D': walls.subsurface(64, 0, 64, 64),
-    'F': dr_pi,#walls.subsurface(4 * 64, 0, 64, 64),
-    'B': walls.subsurface(2 * 64, 5 * 64, 64, 64)
+    'D': walls.subsurface(2 * 64, 2 * 64, 64, 64),
+    'W': walls.subsurface(4 * 64, 3 * 64, 64, 64),
+    'X': walls.subsurface(0, 2 * 64, 64, 64),
+    'P': pygame.image.load('images/pylogo.png').convert(),
+    'C': pygame.image.load('images/cmk.png').convert(),
+    'Y': pygame.image.load('images/youtube.png').convert(),
+    'M': pygame.image.load('images/monkey.png').convert(),
+    'B': walls.subsurface(2 * 64, 5 * 64, 64, 64),
+    'L': pygame.image.load('images/no_more_left.png').convert(),
+    'R': pygame.image.load('images/no_more_right.png').convert(),
+    'F': pygame.image.load('images/xyz.png').convert(),
 }
 
 # game loop
@@ -74,8 +83,8 @@ while True:
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
-    if keys[pygame.K_LEFT]: player_angle += 0.06
-    if keys[pygame.K_RIGHT]: player_angle -= 0.06
+    if keys[pygame.K_LEFT]: player_angle += 0.04
+    if keys[pygame.K_RIGHT]: player_angle -= 0.04
     if keys[pygame.K_UP]:
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
         target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
@@ -138,17 +147,16 @@ while True:
         ray_y = old_y if vertical_depth < horizontal_depth else target_y
 
         # 3D projection
-        
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
-        texture = texture_y if vertical_depth < horizontal_depth else 'B'#texture_x
+        texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
         color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
-        wall_height = MAP_SCALE * 250 / (depth + 0.0001)
+        wall_height = MAP_SCALE * 300 / (depth + 0.0001)
         if wall_height > 50000: wall_height = 50000;
         
         # textures
-        wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
+        wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE) * 1.01, 0, 1, 64)
         wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
         window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
         
@@ -157,7 +165,6 @@ while True:
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
-        #pygame.draw.rect(window, (0, 0, 0), (0, 0, MAP_SIZE * MAP_SCALE, MAP_SIZE * MAP_SCALE))
         for row in range(MAP_SIZE):
             for col in range(MAP_SIZE):
                 pygame.draw.rect(window,
@@ -172,8 +179,8 @@ while True:
 
     # print FPS to screen
     font = pygame.font.SysFont('Monospace Regular', 30)
-    fps_surface = font.render(str(int(clock.get_fps())), False, (255, 0, 0))
-    window.blit(fps_surface, (296, 0))
+    fps_surface = font.render('FPS: ' + str(int(clock.get_fps())), False, (255, 0, 0))
+    if keys[pygame.K_f]: window.blit(fps_surface, (120, 0))
 
     # update display
     pygame.display.flip()
