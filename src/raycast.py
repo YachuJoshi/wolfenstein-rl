@@ -44,8 +44,6 @@ MAP = (
     'DDDDDXDXDXDDDDSPSCSPSS'
 )
 
-
-
 # player coordinates and view angle
 player_x = MAP_SCALE + 20.0
 player_y = MAP_SCALE + 20.0
@@ -68,6 +66,11 @@ textures = {
     'R': pygame.image.load('images/no_more_right.png').convert(),
     'F': pygame.image.load('images/xyz.png').convert(),
 }
+
+# sprites
+enemy = pygame.image.load('images/enemy.png').convert_alpha()
+soldier = enemy.subsurface(0, 0, 64, 64)
+
 
 # game loop
 while True:
@@ -98,7 +101,6 @@ while True:
     
     # draw background
     window.blit(background, (0, 0))
-    #window.fill((100, 100, 100))
     
     # ray casting
     current_angle = player_angle + (FOV / 2)    
@@ -154,6 +156,8 @@ while True:
         
         # increment angle
         current_angle -= (FOV / WIDTH)
+
+    #window.blit(soldier, (100, 100))
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
