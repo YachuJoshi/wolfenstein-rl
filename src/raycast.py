@@ -16,7 +16,7 @@ clock = pygame.time.Clock()
 
 # map
 MAP_SIZE = 22
-MAP_SCALE = 60
+MAP_SCALE = 64
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
 MAP = (
@@ -125,8 +125,6 @@ while True:
             target_x += direction_x * MAP_SCALE
         texture_offset_y = target_y
 
-        old_x = target_x; old_y = target_y
-
         # ray hits horizontal line
         target_y, direction_y = (start_y + MAP_SCALE, 1) if current_cos >= 0 else (start_y, -1)
         for i in range(0, MAP_RANGE, MAP_SCALE):
@@ -143,20 +141,14 @@ while True:
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
 
-        ray_x = old_x if vertical_depth < horizontal_depth else target_x
-        ray_y = old_y if vertical_depth < horizontal_depth else target_y
-
         # 3D projection
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
         texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
-        color = 255 / (1 + depth * depth * 0.0001)
         depth *= cos(player_angle - current_angle)
         wall_height = MAP_SCALE * 300 / (depth + 0.0001)
         if wall_height > 50000: wall_height = 50000;
-        
-        # textures
-        wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE) * 1.01, 0, 1, 64)
+        wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
         wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
         window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
         
