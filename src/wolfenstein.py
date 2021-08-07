@@ -76,7 +76,7 @@ textures = {
 # sprites
 enemy = pygame.image.load('images/enemy.png').convert_alpha()
 sprites = [
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 300, 'y': 150, 'shift': 0.4}
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 450, 'shift': 0.4}
 ]
 
 # game loop
@@ -176,19 +176,11 @@ while True:
         sprite_distance = sqrt(sprite_x * sprite_x + sprite_y * sprite_y)
         sprite2player_angle = atan2(sprite_x, sprite_y)
         player2sprite_angle = sprite2player_angle - player_angle
-        
-        #player2sprite_angle += DOUBLE_PI
-        if sprite_x < 0: player2sprite_angle += DOUBLE_PI; print('adjust angle...')
-        #if sprite_y > 0 and degrees(player_angle) <= 180 : player2sprite_angle += DOUBLE_PI; print('adjust again...')
-        #if sprite_x > 0 and 180 <= degrees(player_angle): player2sprite_angle += DOUBLE_PI
+        if sprite_x < 0: player2sprite_angle += DOUBLE_PI
+        if sprite_x > 0 and degrees(player2sprite_angle) <= -180: player2sprite_angle += DOUBLE_PI
+        if sprite_x < 0 and degrees(player2sprite_angle) >= 180: player2sprite_angle -= DOUBLE_PI
         if sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
-        #if sprite_y <= 50: player_x += offset_x
-        
-        print(degrees(player_angle), sprite_x, sprite_y)
-
-        
-
-        shift_rays = player2sprite_angle / STEP_ANGLE
+        shift_rays = player2sprite_angle / STEP_ANGLE        
         sprite_ray = CENTRAL_RAY - shift_rays
         sprite_height = MAP_SCALE * 300 / (sprite_distance + 0.0001)
         sprite_image = pygame.transform.scale(sprite['image'], (int(sprite_height), int(sprite_height)))
