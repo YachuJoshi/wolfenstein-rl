@@ -75,8 +75,16 @@ textures = {
 
 # sprites
 enemy = pygame.image.load('images/enemy.png').convert_alpha()
+barrel = pygame.image.load('images/barrel.png').convert_alpha()
+pillar = pygame.image.load('images/pillar.png').convert_alpha()
+lamp = pygame.image.load('images/greenlight.png').convert_alpha()
+light = pygame.image.load('images/floorlight.png').convert_alpha()
 sprites = [
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 550, 'shift': 0.4}
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 550, 'shift': 0.4, 'scale': 1.0, 'type': 'dynamic'},
+    {'image': pillar, 'x': 1250, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
+    {'image': pillar, 'x': 1000, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
+    {'image': lamp, 'x': 230, 'y': 160, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 230, 'y': 160, 'shift': 0.0, 'scale': 1.0, 'type': 'light'},
 ]
 
 # game loop
@@ -94,11 +102,7 @@ while True:
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
     if keys[pygame.K_LEFT]: player_angle += 0.04
-        #if degrees(player_angle) < 360: player_angle += 0.04
-        #else: player_angle = 0
     if keys[pygame.K_RIGHT]: player_angle -= 0.04
-        #if degrees(player_angle) > -360: player_angle -= 0.04
-        #else: player_angle = 0
     if keys[pygame.K_UP]:
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
         target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
@@ -109,10 +113,15 @@ while True:
         target_y = int((player_y - offset_y - distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x -= offset_x
         if MAP[target_y] == ' ': player_y -= offset_y
+    
+    # get rid of negative angles
     player_angle %= DOUBLE_PI
 
     # draw background
     window.blit(background, (0, 0))
+    
+    # zbuffer
+    zbuffer = []
     
     # ray casting
     current_angle = player_angle + HALF_FOV
@@ -154,8 +163,8 @@ while True:
                 break
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
-
-        # render 3D projection
+        
+        # calculate 3D projection
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
         texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
@@ -164,7 +173,7 @@ while True:
         if wall_height > 50000: wall_height = 50000;
         wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
         wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
-        window.blit(wall_block, (ray, int(HEIGHT / 2 - wall_height / 2)))
+        zbuffer.append({'image': wall_block, 'x': ray, 'y': int(HEIGHT / 2 - wall_height / 2), 'distance': depth})
         
         # increment angle
         current_angle -= STEP_ANGLE
@@ -179,12 +188,19 @@ while True:
         if sprite_x < 0: player2sprite_angle += DOUBLE_PI
         if sprite_x > 0 and degrees(player2sprite_angle) <= -180: player2sprite_angle += DOUBLE_PI
         if sprite_x < 0 and degrees(player2sprite_angle) >= 180: player2sprite_angle -= DOUBLE_PI
-        if sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
+        if sprite['type'] != 'light' and sprite_distance <= 50: player_x -= offset_x;# player_y -= offset_y
         shift_rays = player2sprite_angle / STEP_ANGLE        
         sprite_ray = CENTRAL_RAY - shift_rays
-        sprite_height = MAP_SCALE * 300 / (sprite_distance + 0.0001)
+        if sprite['type'] == 'light': sprite_height = min(sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400)
+        else: sprite_height = sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001)
         sprite_image = pygame.transform.scale(sprite['image'], (int(sprite_height), int(sprite_height)))
-        window.blit(sprite_image, (sprite_ray - int(sprite_height / 2), 100 - sprite_height * sprite['shift']))
+        zbuffer.append({'image': sprite_image,'x': sprite_ray - int(sprite_height / 2),
+                        'y': 100 - sprite_height * sprite['shift'], 'distance': sprite_distance})
+
+    # render scene
+    zbuffer = sorted(zbuffer, key=lambda k: k['distance'], reverse=True)
+    for item in zbuffer:
+        window.blit(item['image'], (item['x'], item['y']))
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
@@ -197,7 +213,8 @@ while True:
         pygame.draw.line(window, (255, 0, 0), ((player_x / MAP_SCALE) * 5, (player_y / MAP_SCALE) * 5), 
                         ((player_x / MAP_SCALE) * 5 + sin(player_angle) * 5, (player_y / MAP_SCALE) * 5 + cos(player_angle) * 5), 1)
         for sprite in sprites:
-            pygame.draw.circle(window, (0, 0, 255), (int((sprite['x'] / MAP_SCALE) * 5), int((sprite['y'] / MAP_SCALE) * 5)), 2)
+            if sprite['type'] == 'static':
+                pygame.draw.circle(window, (0, 0, 255), (int((sprite['x'] / MAP_SCALE) * 5), int((sprite['y'] / MAP_SCALE) * 5)), 2)
 
     # fps
     clock.tick(60)
