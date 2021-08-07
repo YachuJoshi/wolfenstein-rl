@@ -76,7 +76,7 @@ textures = {
 # sprites
 enemy = pygame.image.load('images/enemy.png').convert_alpha()
 sprites = [
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 450, 'shift': 0.4}
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 550, 'shift': 0.4}
 ]
 
 # game loop
