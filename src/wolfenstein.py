@@ -17,7 +17,7 @@ DOUBLE_PI = 2 * pi
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -80,11 +80,32 @@ pillar = pygame.image.load('images/pillar.png').convert_alpha()
 lamp = pygame.image.load('images/greenlight.png').convert_alpha()
 light = pygame.image.load('images/floorlight.png').convert_alpha()
 sprites = [
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 550, 'shift': 0.4, 'scale': 1.0, 'type': 'dynamic'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 690, 'y': 740, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+
     {'image': pillar, 'x': 1250, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
     {'image': pillar, 'x': 1000, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
     {'image': lamp, 'x': 230, 'y': 160, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
-    {'image': light, 'x': 230, 'y': 160, 'shift': 0.0, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 230, 'y': 160, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 230, 'y': 460, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 230, 'y': 460, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 330, 'y': 710, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 330, 'y': 710, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 580, 'y': 740, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 580, 'y': 740, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1050, 'y': 740, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1050, 'y': 740, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 850, 'y': 420, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 850, 'y': 420, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 600, 'y': 160, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 600, 'y': 160, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1140, 'y': 100, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1140, 'y': 100, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1140, 'y': 400, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1140, 'y': 400, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+
 ]
 
 # game loop
@@ -188,7 +209,7 @@ while True:
         if sprite_x < 0: player2sprite_angle += DOUBLE_PI
         if sprite_x > 0 and degrees(player2sprite_angle) <= -180: player2sprite_angle += DOUBLE_PI
         if sprite_x < 0 and degrees(player2sprite_angle) >= 180: player2sprite_angle -= DOUBLE_PI
-        if sprite['type'] != 'light' and sprite_distance <= 50: player_x -= offset_x;# player_y -= offset_y
+        if sprite['type'] != 'light' and sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
         shift_rays = player2sprite_angle / STEP_ANGLE        
         sprite_ray = CENTRAL_RAY - shift_rays
         if sprite['type'] == 'light': sprite_height = min(sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400)
@@ -213,7 +234,7 @@ while True:
         pygame.draw.line(window, (255, 0, 0), ((player_x / MAP_SCALE) * 5, (player_y / MAP_SCALE) * 5), 
                         ((player_x / MAP_SCALE) * 5 + sin(player_angle) * 5, (player_y / MAP_SCALE) * 5 + cos(player_angle) * 5), 1)
         for sprite in sprites:
-            if sprite['type'] == 'static':
+            if sprite['type'] == 'soldier':
                 pygame.draw.circle(window, (0, 0, 255), (int((sprite['x'] / MAP_SCALE) * 5), int((sprite['y'] / MAP_SCALE) * 5)), 2)
 
     # fps
