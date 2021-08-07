@@ -87,8 +87,12 @@ while True:
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
-    if keys[pygame.K_LEFT]: player_angle += 0.04
-    if keys[pygame.K_RIGHT]: player_angle -= 0.04
+    if keys[pygame.K_LEFT]: 
+        if degrees(player_angle) < 360: player_angle += 0.04
+        else: player_angle = 0
+    if keys[pygame.K_RIGHT]:
+        if degrees(player_angle) > -360: player_angle -= 0.04
+        else: player_angle = 0
     if keys[pygame.K_UP]:
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
         target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
@@ -166,12 +170,9 @@ while True:
         sprite2player_angle = atan2(sprite_x, sprite_y)
         player2sprite_angle = sprite2player_angle - player_angle
         
-        if degrees(player_angle) >= 360: player_angle = 0
-        if degrees(player_angle) <= -360: player_angle = 0
+        if 180 <= degrees(player_angle) <= 360: player2sprite_angle += 2 * pi
+        if -180 >= degrees(player_angle) >= -360: player2sprite_angle -= 2 * pi
 
-        if sprite_x > 0 and 180 <= degrees(player_angle) <= 360 or sprite_x < 0 and sprite_y < 0:
-            player2sprite_angle += (2 * pi)
-        
         shift_rays = player2sprite_angle / (FOV / WIDTH)
         sprite_ray = 159 - shift_rays
         sprite_height = MAP_SCALE * 300 / (sprite_distance + 0.0001)
