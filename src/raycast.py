@@ -1,5 +1,5 @@
 # packages
-from math import sin, cos, pi
+from math import sin, cos, pi, sqrt, atan2, degrees
 import pygame
 import sys
 
@@ -11,7 +11,7 @@ FOV = pi / 3
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -69,8 +69,9 @@ textures = {
 
 # sprites
 enemy = pygame.image.load('images/enemy.png').convert_alpha()
-soldier = enemy.subsurface(0, 0, 64, 64)
-
+sprites = [
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 250, 'y': 150, 'shift': 0.4}
+]
 
 # game loop
 while True:
@@ -143,7 +144,7 @@ while True:
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
 
-        # 3D projection
+        # render 3D projection
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
         texture = texture_y if vertical_depth < horizontal_depth else texture_x
         depth = vertical_depth if vertical_depth < horizontal_depth else horizontal_depth
@@ -157,7 +158,26 @@ while True:
         # increment angle
         current_angle -= (FOV / WIDTH)
 
-    #window.blit(soldier, (100, 100))
+    # sprites (https://lodev.org/cgtutor/raycasting3.html)
+    for sprite in sprites:
+        sprite_x = sprite['x'] - player_x
+        sprite_y = sprite['y'] - player_y
+        sprite_distance = sqrt(sprite_x * sprite_x + sprite_y * sprite_y)
+        sprite2player_angle = atan2(sprite_x, sprite_y)
+        player2sprite_angle = sprite2player_angle - player_angle
+        
+        if degrees(player_angle) >= 360: player_angle = 0
+        if degrees(player_angle) <= -360: player_angle = 0
+
+        if sprite_x > 0 and 180 <= degrees(player_angle) <= 360 or sprite_x < 0 and sprite_y < 0:
+            player2sprite_angle += (2 * pi)
+        
+        shift_rays = player2sprite_angle / (FOV / WIDTH)
+        sprite_ray = 159 - shift_rays
+        sprite_height = MAP_SCALE * 300 / (sprite_distance + 0.0001)
+        sprite_image = pygame.transform.scale(sprite['image'], (int(sprite_height), int(sprite_height)))
+        
+        window.blit(sprite_image, (sprite_ray, 100 - sprite_height * sprite['shift']))
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
@@ -169,6 +189,8 @@ while True:
         pygame.draw.circle(window, (255, 0, 0), (int((player_x / MAP_SCALE) * 5), int((player_y / MAP_SCALE) * 5)), 2)
         pygame.draw.line(window, (255, 0, 0), ((player_x / MAP_SCALE) * 5, (player_y / MAP_SCALE) * 5), 
                         ((player_x / MAP_SCALE) * 5 + sin(player_angle) * 5, (player_y / MAP_SCALE) * 5 + cos(player_angle) * 5), 1)
+        for sprite in sprites:
+            pygame.draw.circle(window, (0, 0, 255), (int((sprite['x'] / MAP_SCALE) * 5), int((sprite['y'] / MAP_SCALE) * 5)), 2)
 
     # fps
     clock.tick(60)
