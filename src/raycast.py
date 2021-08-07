@@ -17,7 +17,7 @@ DOUBLE_PI = 2 * pi
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -93,12 +93,12 @@ while True:
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
-    if keys[pygame.K_LEFT]: 
-        if degrees(player_angle) < 360: player_angle += 0.01#0.04
-        else: player_angle = 0
-    if keys[pygame.K_RIGHT]:
-        if degrees(player_angle) > -360: player_angle -= 0.01#0.04
-        else: player_angle = 0
+    if keys[pygame.K_LEFT]: player_angle += 0.04
+        #if degrees(player_angle) < 360: player_angle += 0.04
+        #else: player_angle = 0
+    if keys[pygame.K_RIGHT]: player_angle -= 0.04
+        #if degrees(player_angle) > -360: player_angle -= 0.04
+        #else: player_angle = 0
     if keys[pygame.K_UP]:
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
         target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
@@ -109,7 +109,8 @@ while True:
         target_y = int((player_y - offset_y - distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x -= offset_x
         if MAP[target_y] == ' ': player_y -= offset_y
-    
+    player_angle %= DOUBLE_PI
+
     # draw background
     window.blit(background, (0, 0))
     
@@ -176,12 +177,16 @@ while True:
         sprite2player_angle = atan2(sprite_x, sprite_y)
         player2sprite_angle = sprite2player_angle - player_angle
         
-        
-        if 180 <= degrees(player_angle) <= 360: player2sprite_angle += DOUBLE_PI
-        if -180 >= degrees(player_angle) >= -360: player2sprite_angle -= DOUBLE_PI
+        #player2sprite_angle += DOUBLE_PI
+        if sprite_x < 0: player2sprite_angle += DOUBLE_PI; print('adjust angle...')
+        #if sprite_y > 0 and degrees(player_angle) <= 180 : player2sprite_angle += DOUBLE_PI; print('adjust again...')
+        #if sprite_x > 0 and 180 <= degrees(player_angle): player2sprite_angle += DOUBLE_PI
         if sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
         #if sprite_y <= 50: player_x += offset_x
-        #print(sprite_distance)
+        
+        print(degrees(player_angle), sprite_x, sprite_y)
+
+        
 
         shift_rays = player2sprite_angle / STEP_ANGLE
         sprite_ray = CENTRAL_RAY - shift_rays
