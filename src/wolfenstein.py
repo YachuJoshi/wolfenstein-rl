@@ -56,57 +56,72 @@ player_y = MAP_SCALE + 20.0
 player_angle = pi / 3
 
 # textures
-background = pygame.image.load('images/background.png').convert()
-walls = pygame.image.load('images/walls.png').convert()
+background = pygame.image.load('images/textures/background.png').convert()
+walls = pygame.image.load('images/textures/walls.png').convert()
 textures = {
     'S': walls.subsurface(0, 0, 64, 64),
     'D': walls.subsurface(2 * 64, 2 * 64, 64, 64),
     'W': walls.subsurface(4 * 64, 3 * 64, 64, 64),
     'X': walls.subsurface(0, 2 * 64, 64, 64),
-    'P': pygame.image.load('images/pylogo.png').convert(),
-    'C': pygame.image.load('images/cmk.png').convert(),
-    'Y': pygame.image.load('images/youtube.png').convert(),
-    'M': pygame.image.load('images/monkey.png').convert(),
+    'P': pygame.image.load('images/textures/pylogo.png').convert(),
+    'C': pygame.image.load('images/textures/cmk.png').convert(),
+    'Y': pygame.image.load('images/textures/youtube.png').convert(),
+    'M': pygame.image.load('images/textures/monkey.png').convert(),
     'B': walls.subsurface(2 * 64, 5 * 64, 64, 64),
-    'L': pygame.image.load('images/no_more_left.png').convert(),
-    'R': pygame.image.load('images/no_more_right.png').convert(),
-    'F': pygame.image.load('images/xyz.png').convert(),
+    'L': pygame.image.load('images/textures/no_more_left.png').convert(),
+    'R': pygame.image.load('images/textures/no_more_right.png').convert(),
+    'F': pygame.image.load('images/textures/xyz.png').convert(),
 }
 
 # sprites
-enemy = pygame.image.load('images/enemy.png').convert_alpha()
-barrel = pygame.image.load('images/barrel.png').convert_alpha()
-pillar = pygame.image.load('images/pillar.png').convert_alpha()
-lamp = pygame.image.load('images/greenlight.png').convert_alpha()
-light = pygame.image.load('images/floorlight.png').convert_alpha()
+enemy = pygame.image.load('images/sprites/enemy.png').convert_alpha()
+lamp = pygame.image.load('images/sprites/greenlight.png').convert_alpha()
+light = pygame.image.load('images/sprites/floorlight.png').convert_alpha()
 sprites = [
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 690, 'y': 740, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-
-    {'image': pillar, 'x': 1250, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
-    {'image': pillar, 'x': 1000, 'y': 1130, 'shift': 0.6, 'scale': 1.6, 'type': 'static'},
-    {'image': lamp, 'x': 230, 'y': 160, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 600, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1000, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1000, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},    
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': lamp, 'x': 1140, 'y': 1250, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1140, 'y':1250, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 230, 'y': 160, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 230, 'y': 160, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 230, 'y': 460, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 230, 'y': 460, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 230, 'y': 460, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 330, 'y': 710, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 330, 'y': 710, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 330, 'y': 710, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 580, 'y': 740, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 580, 'y': 740, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 580, 'y': 740, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 1050, 'y': 740, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1050, 'y': 740, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 1050, 'y': 740, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 850, 'y': 420, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 850, 'y': 420, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 850, 'y': 420, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 600, 'y': 160, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 600, 'y': 160, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 600, 'y': 160, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 1140, 'y': 100, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1140, 'y': 100, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 1140, 'y': 100, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-    {'image': lamp, 'x': 1140, 'y': 400, 'shift': 0.8, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1140, 'y': 400, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 1140, 'y': 400, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
-
+    {'image': lamp, 'x': 1140, 'y': 1050, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1140, 'y':1050, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
+    {'image': lamp, 'x': 1140, 'y': 1250, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
+    {'image': light, 'x': 1140, 'y':1250, 'shift': -0.1, 'scale': 1.0, 'type': 'light'}
 ]
+
+# gun
+gun = {
+    'default': pygame.image.load('images/sprites/gun_0.png').convert_alpha(),
+    'shot_1': pygame.image.load('images/sprites/gun_1.png').convert_alpha(),
+    'shot_2': pygame.image.load('images/sprites/gun_2.png').convert_alpha(),
+}
 
 # game loop
 while True:
@@ -222,6 +237,7 @@ while True:
     zbuffer = sorted(zbuffer, key=lambda k: k['distance'], reverse=True)
     for item in zbuffer:
         window.blit(item['image'], (item['x'], item['y']))
+    #window.blit(gun['default'], (60, 20))
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
