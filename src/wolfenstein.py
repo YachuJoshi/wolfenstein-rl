@@ -237,7 +237,7 @@ while True:
     zbuffer = sorted(zbuffer, key=lambda k: k['distance'], reverse=True)
     for item in zbuffer:
         window.blit(item['image'], (item['x'], item['y']))
-    #window.blit(gun['default'], (60, 20))
+    window.blit(gun['default'], (60, 20))
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
