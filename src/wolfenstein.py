@@ -17,7 +17,7 @@ DOUBLE_PI = 2 * pi
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -25,24 +25,24 @@ MAP_SIZE = 22
 MAP_SCALE = 64
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
-MAP = (
+MAP = list(
     'SSSSSSSBBFBBBBBBBBBBBB'
     'S     SB             B'
     'S     CB   BBBBBB B  B'
     'S     SB       WB B  F'
-    'SSSSS SSWWWW   WB BBBB'
+    'SSTETSSSWWWW   WB BBBB'
     'S      SW      WB    B'
-    'P      SW      WB    B'
-    'S     BBBBBB   WWBB  B'
-    'C         BB     BB  B'
-    'S  SSSBB  FB     BS  S'
-    'P     SB  BBBBB  BS  S'
+    'P     SSW      WB    B'
+    'C     OBBBBB   WWB   B'
+    'S     E   BB     B   B'
+    'STETSSOB  FB     BTETS'
+    'S     SB  BBBBB  BS  S'
     'S     SB         BS  S'
     'SSSSSSSBBBBBBBBBBBS  S'
-    'DDDDDDDDDSSSSSSSSSS  S'
-    'D                    S'
-    'D  DDDDDDSSSSS       M'
-    'D  DDXDXDXDDDS       S'
+    'DDDDDDDDDOSSSSSSSSO  S'
+    'D        E        E  S'
+    'D  DDDDDDOSSSSSSSSO  M'
+    'D  DDXDXDXDDDS   SS  S'
     'D  D        DS       Y'
     'D  D        LS       S'
     'D           RS       M'
@@ -60,6 +60,8 @@ background = pygame.image.load('images/textures/background.png').convert()
 walls = pygame.image.load('images/textures/walls.png').convert()
 textures = {
     'S': walls.subsurface(0, 0, 64, 64),
+    'T': walls.subsurface(0, 0, 64, 64),
+    'O': walls.subsurface(0, 0, 64, 64),
     'D': walls.subsurface(2 * 64, 2 * 64, 64, 64),
     'W': walls.subsurface(4 * 64, 3 * 64, 64, 64),
     'X': walls.subsurface(0, 2 * 64, 64, 64),
@@ -71,6 +73,9 @@ textures = {
     'L': pygame.image.load('images/textures/no_more_left.png').convert(),
     'R': pygame.image.load('images/textures/no_more_right.png').convert(),
     'F': pygame.image.load('images/textures/xyz.png').convert(),
+    'E': walls.subsurface(2 * 64, 16 * 64, 64, 64),
+    'I': walls.subsurface(4 * 64, 16 * 64, 64, 64),
+    'J': walls.subsurface(5 * 64, 16 * 64, 64, 64)
 }
 
 # sprites
@@ -120,7 +125,7 @@ sprites = [
 gun = {
     'default': pygame.image.load('images/sprites/gun_0.png').convert_alpha(),
     'shot_1': pygame.image.load('images/sprites/gun_1.png').convert_alpha(),
-    'shot_2': pygame.image.load('images/sprites/gun_2.png').convert_alpha(),
+    'shot_2': pygame.image.load('images/sprites/gun_2.png').convert_alpha()
 }
 
 # game loop
@@ -134,14 +139,15 @@ while True:
     offset_y = cos(player_angle) * MAP_SPEED
     distance_thresh_x = 10 if offset_x > 0 else -10
     distance_thresh_y = 10 if offset_y > 0 else -10
+    target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
+    target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
     if keys[pygame.K_LEFT]: player_angle += 0.04
     if keys[pygame.K_RIGHT]: player_angle -= 0.04
     if keys[pygame.K_UP]:
-        target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x + offset_x + distance_thresh_x) / MAP_SCALE)
-        target_y = int((player_y + offset_y + distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
+        
         if MAP[target_x] == ' ': player_x += offset_x
         if MAP[target_y] == ' ': player_y += offset_y
     if keys[pygame.K_DOWN]:
@@ -149,6 +155,9 @@ while True:
         target_y = int((player_y - offset_y - distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
         if MAP[target_x] == ' ': player_x -= offset_x
         if MAP[target_y] == ' ': player_y -= offset_y
+    if keys[pygame.K_SPACE]:
+        if MAP[target_x] == 'E': MAP[target_x] = ' '
+        if MAP[target_y] == 'E': MAP[target_y] = ' '
     
     # get rid of negative angles
     player_angle %= DOUBLE_PI
@@ -179,8 +188,9 @@ while True:
             target_square = map_y * MAP_SIZE + map_x
             if target_square not in range(len(MAP)): break
             if MAP[target_square] != ' ':
-                texture_y = MAP[target_square]
-                break
+                texture_y = MAP[target_square] if MAP[target_square] != 'T' else 'I'
+                if MAP[target_square] == 'E': vertical_depth += 32; target_y = player_y + vertical_depth * current_cos
+                break            
             target_x += direction_x * MAP_SCALE
         texture_offset_y = target_y
 
@@ -195,7 +205,8 @@ while True:
             target_square = map_y * MAP_SIZE + map_x
             if target_square not in range(len(MAP)): break
             if MAP[target_square] != ' ':
-                texture_x = MAP[target_square]
+                texture_x = MAP[target_square] if MAP[target_square] != 'O' else 'J'
+                if MAP[target_square] == 'E': horizontal_depth += 32; target_x = player_x + horizontal_depth * current_sin
                 break
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
