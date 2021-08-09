@@ -17,7 +17,7 @@ DOUBLE_PI = 2 * pi
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -84,9 +84,15 @@ lamp = pygame.image.load('images/sprites/greenlight.png').convert_alpha()
 light = pygame.image.load('images/sprites/floorlight.png').convert_alpha()
 sprites = [
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 150, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 270, 'y': 700, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 250, 'y': 720, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 600, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 550, 'y': 750, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 750, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 550, 'y': 940, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 940, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False},
@@ -259,16 +265,17 @@ while True:
         else: sprite_height = sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001)
         if sprite['type'] == 'soldier':
             if not sprite['dead']:
-                if sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
                 if abs(shift_rays) < 20 and sprite_distance < 500 and gun['animation']:
                     sprite['image'] = soldier_death[int(soldier_death_count / 8)]
                     soldier_death_count += 1
                     if soldier_death_count >= 16: sprite['dead'] = True; soldier_death_count = 0
             else: sprite['image'] = soldier_death[-1]
-            if gun['shot_count'] > 10 and sprite['image'] in [soldier_death[0], soldier_death[1], soldier_death[2]]:
-                sprite['image'] = soldier_death[int(soldier_death_count / 8) + 2]
+            if gun['shot_count'] > 16 and sprite['image'] in [soldier_death[0], soldier_death[1], soldier_death[2]]:
+                try: sprite['image'] = soldier_death[int(soldier_death_count / 8) + 2]
+                except: pass
                 soldier_death_count += 1
-                if soldier_death_count >= 16: sprite['dead'] = True; soldier_death_count = 0
+                if soldier_death_count >= 32: sprite['dead'] = True; soldier_death_count = 0
+            if not sprite['dead'] and sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
         sprite_image = pygame.transform.scale(sprite['image'], (int(sprite_height), int(sprite_height)))
         zbuffer.append({'image': sprite_image,'x': sprite_ray - int(sprite_height / 2),
                         'y': 100 - sprite_height * sprite['shift'], 'distance': sprite_distance})
@@ -298,7 +305,7 @@ while True:
         pygame.draw.line(window, (255, 0, 0), ((player_x / MAP_SCALE) * 5, (player_y / MAP_SCALE) * 5), 
                         ((player_x / MAP_SCALE) * 5 + sin(player_angle) * 5, (player_y / MAP_SCALE) * 5 + cos(player_angle) * 5), 1)
         for sprite in sprites:
-            if sprite['type'] == 'soldier':
+            if sprite['type'] == 'soldier' and not sprite['dead']:
                 pygame.draw.circle(window, (0, 0, 255), (int((sprite['x'] / MAP_SCALE) * 5), int((sprite['y'] / MAP_SCALE) * 5)), 2)
 
     # fps
