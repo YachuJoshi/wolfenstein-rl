@@ -17,7 +17,7 @@ DOUBLE_PI = 2 * pi
 # init pygame
 pygame.init()
 pygame.mouse.set_visible(False)
-window = pygame.display.set_mode((WIDTH, HEIGHT))#, pygame.FULLSCREEN
+window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)#, pygame.FULLSCREEN
 clock = pygame.time.Clock()
 
 # map
@@ -87,10 +87,10 @@ sprites = [
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 600, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1000, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1000, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},    
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},    
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier'},
     {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
@@ -147,17 +147,16 @@ while True:
     if keys[pygame.K_LEFT]: player_angle += 0.04
     if keys[pygame.K_RIGHT]: player_angle -= 0.04
     if keys[pygame.K_UP]:
-        
-        if MAP[target_x] == ' ': player_x += offset_x
-        if MAP[target_y] == ' ': player_y += offset_y
+        if MAP[target_x] in ' e': player_x += offset_x
+        if MAP[target_y] in ' e': player_y += offset_y
     if keys[pygame.K_DOWN]:
         target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int((player_x - offset_x - distance_thresh_x) / MAP_SCALE)
         target_y = int((player_y - offset_y - distance_thresh_y) / MAP_SCALE) * MAP_SIZE + int(player_x / MAP_SCALE)
-        if MAP[target_x] == ' ': player_x -= offset_x
-        if MAP[target_y] == ' ': player_y -= offset_y
+        if MAP[target_x] in ' e': player_x -= offset_x
+        if MAP[target_y] in ' e': player_y -= offset_y
     if keys[pygame.K_SPACE]:
-        if MAP[target_x] == 'E': MAP[target_x] = ' '
-        if MAP[target_y] == 'E': MAP[target_y] = ' '
+        if MAP[target_x] in 'Ee': pygame.time.wait(200); MAP[target_x] = chr(ord(MAP[target_x]) ^ 1 << 5)
+        if MAP[target_y] in 'Ee': pygame.time.wait(200); MAP[target_y] = chr(ord(MAP[target_y]) ^ 1 << 5)
     
     # get rid of negative angles
     player_angle %= DOUBLE_PI
@@ -187,9 +186,12 @@ while True:
             if current_sin <= 0: map_x += direction_x
             target_square = map_y * MAP_SIZE + map_x
             if target_square not in range(len(MAP)): break
-            if MAP[target_square] != ' ':
+            if MAP[target_square] not in ' e':
                 texture_y = MAP[target_square] if MAP[target_square] != 'T' else 'I'
-                if MAP[target_square] == 'E': vertical_depth += 32; target_y = player_y + vertical_depth * current_cos
+                if MAP[target_square] == 'E':
+                    target_x += direction_x * 32
+                    vertical_depth = (target_x - player_x) / current_sin;
+                    target_y = player_y + vertical_depth * current_cos
                 break            
             target_x += direction_x * MAP_SCALE
         texture_offset_y = target_y
@@ -204,13 +206,16 @@ while True:
             if current_cos <= 0: map_y += direction_y
             target_square = map_y * MAP_SIZE + map_x
             if target_square not in range(len(MAP)): break
-            if MAP[target_square] != ' ':
+            if MAP[target_square] not in ' e':
                 texture_x = MAP[target_square] if MAP[target_square] != 'O' else 'J'
-                if MAP[target_square] == 'E': horizontal_depth += 32; target_x = player_x + horizontal_depth * current_sin
+                if MAP[target_square] == 'E':
+                    target_y += direction_y * 32;
+                    horizontal_depth = (target_y - player_y) / current_cos;
+                    target_x = player_x + horizontal_depth * current_sin
                 break
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
-        
+
         # calculate 3D projection
         texture_offset = texture_offset_y if vertical_depth < horizontal_depth else texture_offset_x
         texture = texture_y if vertical_depth < horizontal_depth else texture_x
@@ -219,9 +224,9 @@ while True:
         wall_height = MAP_SCALE * 300 / (depth + 0.0001)
         if wall_height > 50000: wall_height = 50000;
         wall_block = textures[texture].subsurface((texture_offset - int(texture_offset / MAP_SCALE) * MAP_SCALE), 0, 1, 64)
-        wall_block = pygame.transform.scale(wall_block, (1, int(wall_height)))
+        wall_block = pygame.transform.scale(wall_block, (1, abs(int(wall_height))))
         zbuffer.append({'image': wall_block, 'x': ray, 'y': int(HEIGHT / 2 - wall_height / 2), 'distance': depth})
-        
+
         # increment angle
         current_angle -= STEP_ANGLE
 
