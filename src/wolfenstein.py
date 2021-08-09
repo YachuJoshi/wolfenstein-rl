@@ -212,7 +212,7 @@ while True:
                     target_y += direction_y * 32;
                     horizontal_depth = (target_y - player_y) / current_cos;
                     target_x = player_x + horizontal_depth * current_sin
-                break
+                break                
             target_y += direction_y * MAP_SCALE
         texture_offset_x = target_x
 
