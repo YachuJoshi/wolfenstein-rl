@@ -83,18 +83,18 @@ enemy = pygame.image.load('images/sprites/enemy.png').convert_alpha()
 lamp = pygame.image.load('images/sprites/greenlight.png').convert_alpha()
 light = pygame.image.load('images/sprites/floorlight.png').convert_alpha()
 sprites = [
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 600, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},    
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier'},
-    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier'},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 200, 'y': 500, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 400, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 850, 'y': 600, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1050, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1100, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 1250, 'y': 1300, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},    
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 700, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y': 1200, 'shift': 0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
+    {'image': enemy.subsurface(0, 0, 64, 64), 'x': 600, 'y':1300, 'shift':  0.4, 'scale': 1.0, 'type': 'soldier', 'dead': False, 'dying': False},
     {'image': lamp, 'x': 1140, 'y': 1250, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
     {'image': light, 'x': 1140, 'y':1250, 'shift': -0.1, 'scale': 1.0, 'type': 'light'},
     {'image': lamp, 'x': 230, 'y': 160, 'shift': 0.7, 'scale': 1.0, 'type': 'light'},
@@ -253,12 +253,24 @@ while True:
         if sprite_x < 0: player2sprite_angle += DOUBLE_PI
         if sprite_x > 0 and degrees(player2sprite_angle) <= -180: player2sprite_angle += DOUBLE_PI
         if sprite_x < 0 and degrees(player2sprite_angle) >= 180: player2sprite_angle -= DOUBLE_PI
-        if sprite['type'] != 'light' and sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
         shift_rays = player2sprite_angle / STEP_ANGLE        
         sprite_ray = CENTRAL_RAY - shift_rays
-        if sprite['type'] == 'light': sprite_height = min(sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400)
+        if sprite['type'] in ['lamp', 'light']:
+            sprite_height = min(sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400)
         else: sprite_height = sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001)
+        #if sprite['type'] == 'soldier' and sprite['dying'] == True: soldier_death[int(soldier_death_count / 15)]
         sprite_image = pygame.transform.scale(sprite['image'], (int(sprite_height), int(sprite_height)))
+        if sprite['type'] == 'soldier':
+            if not sprite['dead']:
+                sprite_height = sprite['scale'] * MAP_SCALE * 300 / (sprite_distance + 0.0001)
+                if sprite_distance <= 10: player_x -= offset_x; player_y -= offset_y
+                if abs(shift_rays) < 20 and keys[pygame.K_LCTRL] and sprite_distance < 500:
+                    sprite['dying'] = True
+                    sprite_image = pygame.transform.scale(soldier_death[int(soldier_death_count / 15)], (int(sprite_height), int(sprite_height)))
+                    soldier_death_count += 1
+                    if soldier_death_count >= 60: soldier_death_count = 0; sprite['dead'] = True
+            else: sprite['image'] = soldier_death[-1]
+
         zbuffer.append({'image': sprite_image,'x': sprite_ray - int(sprite_height / 2),
                         'y': 100 - sprite_height * sprite['shift'], 'distance': sprite_distance})
 
