@@ -124,9 +124,19 @@ sprites = [
 # gun
 gun = {
     'default': pygame.image.load('images/sprites/gun_0.png').convert_alpha(),
-    'shot_1': pygame.image.load('images/sprites/gun_1.png').convert_alpha(),
-    'shot_2': pygame.image.load('images/sprites/gun_2.png').convert_alpha()
+    'shot': [
+        pygame.image.load('images/sprites/gun_0.png').convert_alpha(),
+        pygame.image.load('images/sprites/gun_1.png').convert_alpha(),
+        pygame.image.load('images/sprites/gun_2.png').convert_alpha(),
+        pygame.image.load('images/sprites/gun_2.png').convert_alpha()
+    ],
+    'shot_count': 0,
+    'animation': False
 }
+
+# animation
+soldier_death = [enemy.subsurface(frame * 64, 5 * 64, 64, 64) for frame in range(1, 5)]
+soldier_death_count = 0
 
 # game loop
 while True:
@@ -144,8 +154,8 @@ while True:
 
     # handle user input
     if keys[pygame.K_ESCAPE]: pygame.quit(); sys.exit(0);
-    if keys[pygame.K_LEFT]: player_angle += 0.04
-    if keys[pygame.K_RIGHT]: player_angle -= 0.04
+    if keys[pygame.K_LEFT]: player_angle += 0.03
+    if keys[pygame.K_RIGHT]: player_angle -= 0.03
     if keys[pygame.K_UP]:
         if MAP[target_x] in ' e': player_x += offset_x
         if MAP[target_y] in ' e': player_y += offset_y
@@ -157,6 +167,9 @@ while True:
     if keys[pygame.K_SPACE]:
         if MAP[target_x] in 'Ee': pygame.time.wait(200); MAP[target_x] = chr(ord(MAP[target_x]) ^ 1 << 5)
         if MAP[target_y] in 'Ee': pygame.time.wait(200); MAP[target_y] = chr(ord(MAP[target_y]) ^ 1 << 5)
+    if keys[pygame.K_LCTRL]:
+        if gun['animation'] == False: gun['animation'] = True
+        
     
     # get rid of negative angles
     player_angle %= DOUBLE_PI
@@ -253,7 +266,15 @@ while True:
     zbuffer = sorted(zbuffer, key=lambda k: k['distance'], reverse=True)
     for item in zbuffer:
         window.blit(item['image'], (item['x'], item['y']))
+    
+    # render gun / gun animation
     window.blit(gun['default'], (60, 20))
+    if gun['animation']:
+        gun['animation'] = True
+        window.blit(gun['shot'][int(gun['shot_count'] / 5)], (60, 20))
+        gun['shot_count'] += 1
+        if gun['shot_count'] >= 20: gun['shot_count'] = 0; gun['animation'] = False
+        pygame.display.flip()
 
     # draw map (debug)
     if keys[pygame.K_TAB]:
