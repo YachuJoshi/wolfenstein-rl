@@ -45,15 +45,15 @@ MAP_SPEED = (MAP_SCALE / 2) / 10
 
 MAP = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
-    "S     SS             S"
-    "S     SS   SSSSSS S  S"
-    "S     SS       WS S  F"
-    "SSTSTSSSWWWW   WS SSSS"
-    "S     SSW      WS    S"
-    "S     SSW      WS    S"
-    "S     OSSSSS   WWS   S"
+    "S                    S"
+    "S                    S"
+    "S                    S"
+    "SSTSTSS              S"
     "S     S              S"
-    "SSSSSSSBBBBBBBBBBBS  S"
     "S     S              S"
+    "S     O              S"
+    "S     S              S"
+    "SSSSSSS              S"
+    "S                    S"
     "SSSSSSSSSSSSSSSSSSSSSS"
 )

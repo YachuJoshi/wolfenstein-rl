@@ -36,6 +36,7 @@ if __name__ == "__main__":
         if keys[pygame.K_ESCAPE]:
             pygame.quit()
             sys.exit(0)
+
         if keys[pygame.K_LEFT]:
             player_angle += 0.03
 
@@ -77,7 +78,6 @@ if __name__ == "__main__":
                 player_y -= offset_x
 
         if keys[pygame.K_d]:
-
             target_x = int(player_y / MAP_SCALE) * MAP_SIZE + int(
                 (player_x + offset_x + distance_thresh_x) / MAP_SCALE
             )
@@ -247,13 +247,13 @@ if __name__ == "__main__":
                     ):
                         sprite["image"] = soldier_death[int(soldier_death_count / 8)]
                         soldier_death_count += 1
-                        if soldier_death_count >= 10:
+                        if soldier_death_count >= 16:
                             sprite["dead"] = True
                             soldier_death_count = 0
-                            print("DEAD")
+                            soldier_dx = 0
+                            print("DEAD FROM ABOVE")
                 else:
                     sprite["image"] = soldier_death[-1]
-                    soldier_dx = 0
                 if gun["shot_count"] > 16 and sprite["image"] in [
                     soldier_death[0],
                     soldier_death[1],
@@ -263,6 +263,8 @@ if __name__ == "__main__":
                         sprite["image"] = soldier_death[
                             int(soldier_death_count / 8) + 2
                         ]
+                        soldier_dx = 0
+                        print("DEAD FROM BELOW 1234")
                     except:
                         pass
                     soldier_death_count += 1

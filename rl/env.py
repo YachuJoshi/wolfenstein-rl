@@ -27,8 +27,10 @@ class WolfensteinEnv(gym.Env):
         )
 
         self.action_space = Discrete(3)
+
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
+
         self.window, self.clock = window, clock
         self.sprites = sprites
         self.player_x = MAP_SCALE * 3 + 20.0
@@ -38,15 +40,13 @@ class WolfensteinEnv(gym.Env):
         self.zbuffer = []
 
     def _get_obs(self):
-        if len(self.sprites) == 0:
-            return np.array([self.player_x, 0])
-
         return np.array([self.player_x, self.sprites[0]["x"]])
 
     def _get_info(self):
         return {}
 
     def reset(self):
+        self.soldier_death_count = 0
         self.enemy_dx = 1 if np.random.rand() > 0.5 else -1
         self.zbuffer = []
         self.reward = 0
@@ -73,8 +73,8 @@ class WolfensteinEnv(gym.Env):
         return observation
 
     def step(self, action):
+        self.reward = 0
         self.done = False
-        soldier_death_count = 0
 
         offset_x = sin(self.player_angle) * MAP_SPEED
         offset_y = cos(self.player_angle) * MAP_SPEED
@@ -115,6 +115,9 @@ class WolfensteinEnv(gym.Env):
         elif action == 2:
             if gun["animation"] == False:
                 gun["animation"] = True
+
+            if not self.sprites[0]["dead"]:
+                self.reward -= 0.1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -255,38 +258,44 @@ class WolfensteinEnv(gym.Env):
                         and sprite_distance < 500
                         and gun["animation"]
                     ):
-                        sprite["image"] = soldier_death[int(soldier_death_count / 8)]
-                        soldier_death_count += 1
-                        if soldier_death_count >= 10:
+                        sprite["image"] = soldier_death[
+                            int(self.soldier_death_count / 8)
+                        ]
+                        self.soldier_death_count += 1
+                        if self.soldier_death_count >= 16:
                             sprite["dead"] = True
-                            soldier_death_count = 0
+                            self.soldier_death_count = 0
+                            self.done = True
+                            self.reward += 10
 
                 else:
                     sprite["image"] = soldier_death[-1]
                     self.enemy_dx = 0
-                if gun["shot_count"] > 16 and sprite["image"] in [
+                    self.done = True
+                if gun["shot_count"] > 10 and sprite["image"] in [
                     soldier_death[0],
                     soldier_death[1],
                     soldier_death[2],
                 ]:
                     try:
                         sprite["image"] = soldier_death[
-                            int(soldier_death_count / 8) + 2
+                            int(self.soldier_death_count / 8) + 2
                         ]
                         self.enemy_dx = 0
-                        self.reward += 100
                         self.done = True
+                        self.reward += 10
 
                     except:
                         pass
-                    soldier_death_count += 1
-                    if soldier_death_count >= 32:
+                    self.soldier_death_count += 1
+                    if self.soldier_death_count >= 32:
                         sprite["dead"] = True
-                        soldier_death_count = 0
+                        self.soldier_death_count = 0
 
                 if not sprite["dead"] and sprite_distance <= 10:
                     self.player_x -= offset_x
                     self.player_y -= offset_y
+
             sprite_image = pygame.transform.scale(
                 sprite["image"], (int(sprite_height), int(sprite_height))
             )
