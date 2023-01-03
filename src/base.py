@@ -12,7 +12,8 @@ CENTRAL_RAY = int(WIDTH / 2) - 1
 DOUBLE_PI = 2 * pi
 
 # map
-MAP_SIZE = 22
+# MAP_SIZE = 22  # -> BASIC
+MAP_SIZE = 10  # -> DEFEND
 MAP_SCALE = 64
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
@@ -43,7 +44,7 @@ MAP_SPEED = (MAP_SCALE / 2) / 10
 
 # "SSTETSSSWWWW   WS SSSS" -> Door
 
-MAP = list(
+MAP_BASIC = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
     "S                    S"
     "S                    S"
@@ -56,4 +57,18 @@ MAP = list(
     "SSSSSSS              S"
     "S                    S"
     "SSSSSSSSSSSSSSSSSSSSSS"
+)
+
+
+MAP_DEFEND = list(
+    "DDDDDDDDDD"
+    "B        E"
+    "B        E"
+    "B        E"
+    "B        E"
+    "B        E"
+    "B        E"
+    "B        E"
+    "B        E"
+    "SSSSSSSSSS"
 )

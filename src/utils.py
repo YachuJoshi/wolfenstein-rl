@@ -5,12 +5,10 @@ from src.base import MAP, MAP_SIZE, MAP_SCALE
 
 def draw_minimap(window, sprites, player_x, player_y, player_angle):
     for row in range(MAP_SIZE):
-        for col in range(MAP_SIZE):
+        for col in range(10):
             pygame.draw.rect(
                 window,
-                (100, 100, 100)
-                if MAP[row * MAP_SIZE + col] != " "
-                else (200, 200, 200),
+                (100, 100, 100) if MAP[row * 10 + col] != " " else (200, 200, 200),
                 (col * 5, row * 5, 5, 5),
             )
         pygame.draw.circle(

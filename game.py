@@ -9,7 +9,6 @@ from math import sin, cos, sqrt, atan2, degrees
 
 
 if __name__ == "__main__":
-    soldier_dx = 1
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -35,7 +34,7 @@ if __name__ == "__main__":
         # handle user input
         if keys[pygame.K_ESCAPE]:
             pygame.quit()
-            sys.exit(0)
+            sys.exit()
 
         if keys[pygame.K_LEFT]:
             player_angle += 0.03
@@ -207,6 +206,9 @@ if __name__ == "__main__":
 
         # position & scale sprites
         for sprite in sprites:
+            soldier_dx = 0.2
+            soldier_dy = 0.2
+
             sprite_x = sprite["x"] - player_x
             sprite_y = sprite["y"] - player_y
             sprite_distance = sqrt(sprite_x * sprite_x + sprite_y * sprite_y)
@@ -235,10 +237,18 @@ if __name__ == "__main__":
             if sprite["type"] == "soldier":
                 if not sprite["dead"]:
 
-                    if sprite["x"] > 360 or sprite["x"] < 82:
+                    if sprite["x"] < player_x and soldier_dx < 0:
+                        soldier_dx *= 1
+                    elif sprite["x"] > player_x and soldier_dx > 0:
                         soldier_dx *= -1
 
+                    if sprite["y"] < player_y and soldier_dy < 0:
+                        soldier_dy *= 1
+                    elif sprite["y"] > player_y and soldier_dy > 0:
+                        soldier_dy *= -1
+
                     sprite["x"] += soldier_dx
+                    sprite["y"] += soldier_dy
 
                     if (
                         abs(shift_rays) < 20
@@ -250,8 +260,7 @@ if __name__ == "__main__":
                         if soldier_death_count >= 16:
                             sprite["dead"] = True
                             soldier_death_count = 0
-                            soldier_dx = 0
-                            print("DEAD FROM ABOVE")
+
                 else:
                     sprite["image"] = soldier_death[-1]
                 if gun["shot_count"] > 16 and sprite["image"] in [
@@ -264,7 +273,6 @@ if __name__ == "__main__":
                             int(soldier_death_count / 8) + 2
                         ]
                         soldier_dx = 0
-                        print("DEAD FROM BELOW 1234")
                     except:
                         pass
                     soldier_death_count += 1
@@ -308,7 +316,7 @@ if __name__ == "__main__":
         #     show_fps(window, clock)
 
         # fps
-        clock.tick(60)
+        clock.tick(120)
 
         # update display
         pygame.display.update()

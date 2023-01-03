@@ -3,9 +3,20 @@ import pygame
 import numpy as np
 from src.base import *
 from src.screen import window, clock
-from src.textures import *
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees, pi
+from math import sin, cos, sqrt, atan2, degrees
+from src.enemy import Enemy
+from collections import namedtuple
+from src.textures import background, gun, textures, soldier_death
+
+Point = namedtuple("Point", ("x", "y"))
+
+coordinates = [
+    Point(95.0, 95.0),  # 1
+    Point(540.0, 95.0),  # 2
+    Point(95.0, 540.0),  # 3
+    Point(540.0, 540.0),  # 4
+]
 
 
 class WolfensteinEnv(gym.Env):
@@ -17,11 +28,18 @@ class WolfensteinEnv(gym.Env):
     def __init__(self, render_mode=None):
         super(WolfensteinEnv, self).__init__()
 
-        shape = (2,)
+        shape = (9,)
         obs_low = np.ones(shape) * -np.inf
         obs_high = np.ones(shape) * np.inf
 
-        # [ playerXPosition, enemyXPosition ]
+        # [
+        #   enemyOneXPosition, enemyOneYPosition,
+        #   enemyTwoXPosition, enemyTwoYPosition,
+        #   enemyThreeXPosition, enemyThreeYPosition,
+        #   enemyFourXPosition, enemyFourYPosition,
+        #   ammoCount
+        #  ]
+
         self.observation_space = Box(
             low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
         )
@@ -32,38 +50,47 @@ class WolfensteinEnv(gym.Env):
         self.render_mode = render_mode
 
         self.window, self.clock = window, clock
-        self.sprites = sprites
-        self.player_x = MAP_SCALE * 3 + 20.0
-        self.player_y = MAP_SCALE * 8 + 20.0
-        self.player_angle = pi
-        self.enemy_dx = 1
+        self.enemies = []
+        self.player_x = 320.0
+        self.player_y = 320.0
+        self.player_angle = 1.5
+        self.ammo_count = 100
+        self.player_health = 100
         self.zbuffer = []
 
     def _get_obs(self):
-        return np.array([self.player_x, self.sprites[0]["x"]])
+        obs_array = []
+        for enemy in self.enemies:
+            obs_array.append(enemy.x)
+            obs_array.append(enemy.y)
+        obs_array.append(self.ammo_count)
+
+        return np.array(obs_array)
 
     def _get_info(self):
         return {}
 
+    def _regenerate_enemies(self, index):
+        self.enemies = list(filter(lambda enemy: (enemy["id"] != index), self.enemies))
+        x, y = coordinates[index - 1]
+        self.enemies.append(Enemy(index, x, y))
+        self.enemies = sorted(self.enemies, key=lambda enemy: enemy["id"])
+
     def reset(self):
-        self.soldier_death_count = 0
-        self.enemy_dx = 1 if np.random.rand() > 0.5 else -1
+        self.player_health = 100
         self.zbuffer = []
         self.reward = 0
         self.done = False
-        self.player_x = MAP_SCALE * 3 + 20.0
-        self.player_y = MAP_SCALE * 8 + 20.0
-        self.player_angle = pi
-        self.sprites = [
-            {
-                "image": enemy.subsurface(0, 0, 64, 64),
-                "x": 180 if np.random.rand() > 0.5 else 280,
-                "y": 360,
-                "shift": 0.4,
-                "scale": 1.0,
-                "type": "soldier",
-                "dead": False,
-            },
+        self.player_x = 320.0
+        self.player_y = 320.0
+        self.player_angle = 1.5
+        self.ammo_count = 100
+        self.soldier_death_count = 0
+        self.enemies = [
+            Enemy(id=1, x=95.0, y=95.0),
+            Enemy(id=2, x=540.0, y=95.0),
+            Enemy(id=3, x=95.0, y=540.0),
+            Enemy(id=4, x=540.0, y=540.0),
         ]
         observation = self._get_obs()
 
@@ -73,7 +100,6 @@ class WolfensteinEnv(gym.Env):
         return observation
 
     def step(self, action):
-        self.reward = 0
         self.done = False
 
         offset_x = sin(self.player_angle) * MAP_SPEED
@@ -88,36 +114,19 @@ class WolfensteinEnv(gym.Env):
             (self.player_y + offset_y + distance_thresh_y) / MAP_SCALE
         ) * MAP_SIZE + int(self.player_x / MAP_SCALE)
 
-        # 0 -> Strafe Left
-        # 1 -> Strafe Right
+        # 0 -> Turn Left
+        # 1 -> Turn Right
         # 2 -> Attack
 
         if action == 0:
-            target_x = int(self.player_y / MAP_SCALE) * MAP_SIZE + int(
-                (self.player_x - offset_x - distance_thresh_x) / MAP_SCALE
-            )
-            if MAP[target_x] in " e":
-                self.player_x += offset_y
-
-            if MAP[target_y] in " e":
-                self.player_y -= offset_x
+            self.player_angle += 0.02
 
         elif action == 1:
-            target_x = int(self.player_y / MAP_SCALE) * MAP_SIZE + int(
-                (self.player_x + offset_x + distance_thresh_x) / MAP_SCALE
-            )
-
-            if MAP[target_x] in " e":
-                self.player_x -= offset_y
-            if MAP[target_y] in " e":
-                self.player_y += offset_x
+            self.player_angle -= 0.02
 
         elif action == 2:
             if gun["animation"] == False:
                 gun["animation"] = True
-
-            if not self.sprites[0]["dead"]:
-                self.reward -= 0.1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -147,11 +156,15 @@ class WolfensteinEnv(gym.Env):
                 if current_sin <= 0:
                     map_x += direction_x
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP)):
+                if target_square not in range(len(MAP_DEFEND)):
                     break
-                if MAP[target_square] not in " e":
-                    texture_y = MAP[target_square] if MAP[target_square] != "T" else "I"
-                    if MAP[target_square] == "E":
+                if MAP_DEFEND[target_square] not in " e":
+                    texture_y = (
+                        MAP_DEFEND[target_square]
+                        if MAP_DEFEND[target_square] != "T"
+                        else "I"
+                    )
+                    if MAP_DEFEND[target_square] == "E":
                         target_x += direction_x * 32
                         vertical_depth = (target_x - self.player_x) / current_sin
                         target_y = self.player_y + vertical_depth * current_cos
@@ -171,11 +184,15 @@ class WolfensteinEnv(gym.Env):
                 if current_cos <= 0:
                     map_y += direction_y
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP)):
+                if target_square not in range(len(MAP_DEFEND)):
                     break
-                if MAP[target_square] not in " e":
-                    texture_x = MAP[target_square] if MAP[target_square] != "O" else "J"
-                    if MAP[target_square] == "E":
+                if MAP_DEFEND[target_square] not in " e":
+                    texture_x = (
+                        MAP_DEFEND[target_square]
+                        if MAP_DEFEND[target_square] != "O"
+                        else "J"
+                    )
+                    if MAP_DEFEND[target_square] == "E":
                         target_y += direction_y * 32
                         horizontal_depth = (target_y - self.player_y) / current_cos
                         target_x = self.player_x + horizontal_depth * current_sin
@@ -218,9 +235,9 @@ class WolfensteinEnv(gym.Env):
             current_angle -= STEP_ANGLE
 
         # position & scale sprites
-        for sprite in self.sprites:
-            sprite_x = sprite["x"] - self.player_x
-            sprite_y = sprite["y"] - self.player_y
+        for index, sprite in enumerate(self.enemies, start=1):
+            sprite_x = sprite.x - self.player_x
+            sprite_y = sprite.y - self.player_y
             sprite_distance = sqrt(sprite_x * sprite_x + sprite_y * sprite_y)
             sprite2player_angle = atan2(sprite_x, sprite_y)
             player2sprite_angle = sprite2player_angle - self.player_angle
@@ -235,82 +252,94 @@ class WolfensteinEnv(gym.Env):
             sprite_ray = CENTRAL_RAY - shift_rays
 
             if (
-                sprite["type"] in ["lamp", "light"]
-                or sprite["type"] == "soldier"
-                and sprite["dead"] == True
+                sprite.type in ["lamp", "light"]
+                or sprite.type == "soldier"
+                and sprite.dead == True
             ):
                 sprite_height = min(
-                    sprite["scale"] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
+                    sprite.scale * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
                 )
             else:
                 sprite_height = (
-                    sprite["scale"] * MAP_SCALE * 300 / (sprite_distance + 0.0001)
+                    sprite.scale * MAP_SCALE * 300 / (sprite_distance + 0.0001)
                 )
-            if sprite["type"] == "soldier":
-                if not sprite["dead"]:
-                    if sprite["x"] > 360 or sprite["x"] < 82:
-                        self.enemy_dx *= -1
+            if sprite.type == "soldier":
+                if not sprite.dead:
+                    if sprite.x < self.player_x and sprite.dx < 0:
+                        sprite.dx *= 1
+                    elif sprite.x > self.player_x and sprite.dx > 0:
+                        sprite.dx *= -1
 
-                    sprite["x"] += self.enemy_dx
+                    if sprite.y < self.player_y and sprite.dy < 0:
+                        sprite.dy *= 1
+                    elif sprite.y > self.player_y and sprite.dy > 0:
+                        sprite.dy *= -1
+
+                    sprite.x += sprite.dx
+                    sprite.y += sprite.dy
 
                     if (
                         abs(shift_rays) < 20
                         and sprite_distance < 500
                         and gun["animation"]
                     ):
-                        sprite["image"] = soldier_death[
-                            int(self.soldier_death_count / 8)
-                        ]
+                        sprite.image = soldier_death[int(self.soldier_death_count / 8)]
                         self.soldier_death_count += 1
                         if self.soldier_death_count >= 16:
-                            sprite["dead"] = True
+                            sprite.dead = True
                             self.soldier_death_count = 0
-                            self.done = True
                             self.reward += 10
+                            self._regenerate_enemies(index)
 
                 else:
-                    sprite["image"] = soldier_death[-1]
-                    self.enemy_dx = 0
-                    self.done = True
-                if gun["shot_count"] > 10 and sprite["image"] in [
+                    sprite.image = soldier_death[-1]
+
+                if gun["shot_count"] > 16 and sprite.image in [
                     soldier_death[0],
                     soldier_death[1],
                     soldier_death[2],
                 ]:
                     try:
-                        sprite["image"] = soldier_death[
+                        sprite.image = soldier_death[
                             int(self.soldier_death_count / 8) + 2
                         ]
-                        self.enemy_dx = 0
-                        self.done = True
+                        # self.enemy_dx = 0
                         self.reward += 10
 
                     except:
                         pass
                     self.soldier_death_count += 1
-                    if self.soldier_death_count >= 32:
-                        sprite["dead"] = True
-                        self.soldier_death_count = 0
 
-                if not sprite["dead"] and sprite_distance <= 10:
-                    self.player_x -= offset_x
-                    self.player_y -= offset_y
+                    if self.soldier_death_count >= 32:
+                        sprite.dead = True
+                        self.soldier_death_count = 0
+                        self.reward += 10
+
+                if not sprite.dead and sprite_distance <= 10:
+                    self.reward -= 1000
+                    self.player_health -= 20
+
+                    # TODO: Remove that enemy & Add that enemy to the bounday
+                    self._regenerate_enemies(index)
+
+                    if self.player_health <= 0:
+                        self.done = True
 
             sprite_image = pygame.transform.scale(
-                sprite["image"], (int(sprite_height), int(sprite_height))
+                sprite.image, (int(sprite_height), int(sprite_height))
             )
 
             self.zbuffer.append(
                 {
                     "image": sprite_image,
                     "x": sprite_ray - int(sprite_height / 2),
-                    "y": 100 - sprite_height * sprite["shift"],
+                    "y": 100 - sprite_height * sprite.shift,
                     "distance": sprite_distance,
                 }
             )
 
         if not self.done:
-            self.reward -= 0.1
+            self.reward += 1
 
         observation = self._get_obs()
         reward = self.reward

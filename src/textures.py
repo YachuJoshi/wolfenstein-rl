@@ -21,6 +21,42 @@ enemy = pygame.image.load("./images/sprites/enemy.png").convert_alpha()
 lamp = pygame.image.load("./images/sprites/greenlight.png").convert_alpha()
 light = pygame.image.load("./images/sprites/floorlight.png").convert_alpha()
 sprites = [
+    {
+        "image": enemy.subsurface(0, 0, 64, 64),
+        "x": 95.0,
+        "y": 95.0,
+        "shift": 0.4,
+        "scale": 1.0,
+        "type": "soldier",
+        "dead": False,
+    },
+    {
+        "image": enemy.subsurface(0, 0, 64, 64),
+        "x": 540.0,
+        "y": 95.0,
+        "shift": 0.4,
+        "scale": 1.0,
+        "type": "soldier",
+        "dead": False,
+    },
+    {
+        "image": enemy.subsurface(0, 0, 64, 64),
+        "x": 95.0,
+        "y": 540.0,
+        "shift": 0.4,
+        "scale": 1.0,
+        "type": "soldier",
+        "dead": False,
+    },
+    {
+        "image": enemy.subsurface(0, 0, 64, 64),
+        "x": 540.0,
+        "y": 540.0,
+        "shift": 0.4,
+        "scale": 1.0,
+        "type": "soldier",
+        "dead": False,
+    },
     # {
     #     "image": enemy.subsurface(0, 0, 64, 64),
     #     "x": 120,
@@ -30,15 +66,15 @@ sprites = [
     #     "type": "soldier",
     #     "dead": False,
     # },
-    {
-        "image": enemy.subsurface(0, 0, 64, 64),
-        "x": 212,
-        "y": 360,
-        "shift": 0.4,
-        "scale": 1.0,
-        "type": "soldier",
-        "dead": False,
-    },
+    # {
+    #     "image": enemy.subsurface(0, 0, 64, 64),
+    #     "x": 212,
+    #     "y": 360,
+    #     "shift": 0.4,
+    #     "scale": 1.0,
+    #     "type": "soldier",
+    #     "dead": False,
+    # },
     # {
     #     "image": enemy.subsurface(0, 0, 64, 64),
     #     "x": 150,
