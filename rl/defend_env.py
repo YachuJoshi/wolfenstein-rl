@@ -4,7 +4,7 @@ import numpy as np
 from src.base import *
 from src.screen import window, clock
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees
+from math import sin, cos, sqrt, atan2, degrees, pi
 from src.enemy import Enemy
 from collections import namedtuple
 from src.textures import background, gun, textures, soldier_death
@@ -19,14 +19,14 @@ coordinates = [
 ]
 
 
-class WolfensteinEnv(gym.Env):
+class WolfensteinDefendTheCenterEnv(gym.Env):
     metadata = {
         "render_modes": ["human"],
         "render_fps": 120,
     }
 
     def __init__(self, render_mode=None):
-        super(WolfensteinEnv, self).__init__()
+        super(WolfensteinDefendTheCenterEnv, self).__init__()
 
         shape = (9,)
         obs_low = np.ones(shape) * -np.inf
@@ -53,8 +53,8 @@ class WolfensteinEnv(gym.Env):
         self.enemies = []
         self.player_x = 320.0
         self.player_y = 320.0
-        self.player_angle = 1.5
-        self.ammo_count = 100
+        self.player_angle = pi / 4
+        self.ammo_count = 200
         self.player_health = 100
         self.zbuffer = []
 
@@ -71,21 +71,20 @@ class WolfensteinEnv(gym.Env):
         return {}
 
     def _regenerate_enemies(self, index):
-        self.enemies = list(filter(lambda enemy: (enemy["id"] != index), self.enemies))
+        self.enemies = list(filter(lambda enemy: (enemy.id != index), self.enemies))
         x, y = coordinates[index - 1]
         self.enemies.append(Enemy(index, x, y))
-        self.enemies = sorted(self.enemies, key=lambda enemy: enemy["id"])
+        self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
     def reset(self):
-        self.player_health = 100
         self.zbuffer = []
         self.reward = 0
         self.done = False
         self.player_x = 320.0
         self.player_y = 320.0
         self.player_angle = 1.5
-        self.ammo_count = 100
-        self.soldier_death_count = 0
+        self.player_health = 100
+        self.ammo_count = 200
         self.enemies = [
             Enemy(id=1, x=95.0, y=95.0),
             Enemy(id=2, x=540.0, y=95.0),
@@ -125,8 +124,13 @@ class WolfensteinEnv(gym.Env):
             self.player_angle -= 0.02
 
         elif action == 2:
-            if gun["animation"] == False:
+            if gun["animation"] == False and self.ammo_count > 0:
                 gun["animation"] = True
+                self.ammo_count -= 1
+
+                enemy_dead_status = [enemy.dead for enemy in self.enemies]
+                if False in enemy_dead_status:
+                    self.reward -= 0.1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -278,48 +282,63 @@ class WolfensteinEnv(gym.Env):
                     sprite.x += sprite.dx
                     sprite.y += sprite.dy
 
+                    # Shoot & Enemy Dead
                     if (
                         abs(shift_rays) < 20
                         and sprite_distance < 500
                         and gun["animation"]
                     ):
-                        sprite.image = soldier_death[int(self.soldier_death_count / 8)]
-                        self.soldier_death_count += 1
-                        if self.soldier_death_count >= 16:
+                        sprite.image = soldier_death[int(sprite.death_count / 8)]
+                        sprite.death_count += 1
+                        if sprite.death_count >= 16:
                             sprite.dead = True
-                            self.soldier_death_count = 0
+                            sprite.death_count = 0
+                            sprite.dx = 0
+                            sprite.dy = 0
                             self.reward += 10
                             self._regenerate_enemies(index)
-
+                # Enemy Dead
                 else:
                     sprite.image = soldier_death[-1]
+                    sprite.dead = True
+                    sprite.death_count = 0
+                    sprite.dx = 0
+                    sprite.dy = 0
+                    self.reward += 10
+                    self._regenerate_enemies(index)
 
+                # Shoot & Enemy Dead
                 if gun["shot_count"] > 16 and sprite.image in [
                     soldier_death[0],
                     soldier_death[1],
                     soldier_death[2],
                 ]:
                     try:
-                        sprite.image = soldier_death[
-                            int(self.soldier_death_count / 8) + 2
-                        ]
-                        # self.enemy_dx = 0
+                        sprite.image = soldier_death[int(sprite.death_count / 8) + 2]
+                        sprite.dead = True
+                        sprite.death_count = 0
+                        sprite.dx = 0
+                        sprite.dy = 0
                         self.reward += 10
+                        self._regenerate_enemies(index)
 
                     except:
                         pass
-                    self.soldier_death_count += 1
+                    sprite.death_count += 1
 
-                    if self.soldier_death_count >= 32:
+                    if sprite.death_count >= 32:
                         sprite.dead = True
-                        self.soldier_death_count = 0
+                        sprite.death_count = 0
                         self.reward += 10
 
                 if not sprite.dead and sprite_distance <= 10:
                     self.reward -= 1000
                     self.player_health -= 20
+                    sprite.dead = True
+                    sprite.dx = 0
+                    sprite.dy = 0
 
-                    # TODO: Remove that enemy & Add that enemy to the bounday
+                    # Remove that enemy & Add that enemy to the bounday
                     self._regenerate_enemies(index)
 
                     if self.player_health <= 0:
@@ -339,7 +358,7 @@ class WolfensteinEnv(gym.Env):
             )
 
         if not self.done:
-            self.reward += 1
+            self.reward += 0.1
 
         observation = self._get_obs()
         reward = self.reward

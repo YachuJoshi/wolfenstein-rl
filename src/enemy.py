@@ -12,4 +12,5 @@ class Enemy:
         self.dead = False
         self.dx = 0.2
         self.dy = 0.2
+        self.death_count = 0
         self.image = enemy.subsurface(0, 0, 64, 64)
