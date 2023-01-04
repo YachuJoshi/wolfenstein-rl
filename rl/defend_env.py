@@ -118,10 +118,10 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         # 2 -> Attack
 
         if action == 0:
-            self.player_angle += 0.02
+            self.player_angle += 0.08
 
         elif action == 1:
-            self.player_angle -= 0.02
+            self.player_angle -= 0.08
 
         elif action == 2:
             if gun["animation"] == False and self.ammo_count > 0:
@@ -295,7 +295,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                             sprite.death_count = 0
                             sprite.dx = 0
                             sprite.dy = 0
-                            self.reward += 10
+                            self.reward += 100
                             self._regenerate_enemies(index)
                 # Enemy Dead
                 else:
@@ -358,7 +358,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
             )
 
         if not self.done:
-            self.reward += 0.1
+            self.reward += 1
 
         observation = self._get_obs()
         reward = self.reward
