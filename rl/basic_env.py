@@ -8,14 +8,14 @@ from math import sin, cos, sqrt, atan2, degrees, pi
 from src.textures import background, enemy, gun, textures, soldier_death
 
 
-class WolfensteinEnv(gym.Env):
+class WolfensteinBasicEnv(gym.Env):
     metadata = {
         "render_modes": ["human"],
         "render_fps": 120,
     }
 
     def __init__(self, render_mode=None):
-        super(WolfensteinEnv, self).__init__()
+        super(WolfensteinBasicEnv, self).__init__()
 
         shape = (2,)
         obs_low = np.ones(shape) * -np.inf

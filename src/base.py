@@ -60,7 +60,7 @@ MAP_BASIC = list(
 )
 
 
-MAP_DEFEND = list(
+MAP = MAP_DEFEND = list(
     "DDDDDDDDDD"
     "B        E"
     "B        E"

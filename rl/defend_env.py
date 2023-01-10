@@ -4,7 +4,7 @@ import numpy as np
 from src.base import *
 from src.screen import window, clock
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees, pi
+from math import sin, cos, sqrt, atan2, degrees
 from src.enemy import Enemy
 from collections import namedtuple
 from src.textures import background, gun, textures, soldier_death
@@ -12,10 +12,14 @@ from src.textures import background, gun, textures, soldier_death
 Point = namedtuple("Point", ("x", "y"))
 
 coordinates = [
-    Point(95.0, 95.0),  # 1
-    Point(540.0, 95.0),  # 2
-    Point(95.0, 540.0),  # 3
-    Point(540.0, 540.0),  # 4
+    Point(95.0, 95.0),
+    Point(540.0, 95.0),
+    Point(95.0, 540.0),
+    Point(540.0, 540.0),
+    # Point(95.0, 222.0),
+    # Point(222.0, 95.0),
+    # Point(222.0, 540.0),
+    # Point(540.0, 222.0),
 ]
 
 
@@ -53,10 +57,11 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.enemies = []
         self.player_x = 320.0
         self.player_y = 320.0
-        self.player_angle = pi / 4
+        self.player_angle = 1.5
         self.ammo_count = 200
         self.player_health = 100
         self.zbuffer = []
+        self.enemies_death_count = 0
 
     def _get_obs(self):
         obs_array = []
@@ -77,6 +82,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
     def reset(self):
+        print(self.enemies_death_count)
+        self.enemies_death_count = 0
         self.zbuffer = []
         self.reward = 0
         self.done = False
@@ -86,11 +93,9 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.player_health = 100
         self.ammo_count = 200
         self.enemies = [
-            Enemy(id=1, x=95.0, y=95.0),
-            Enemy(id=2, x=540.0, y=95.0),
-            Enemy(id=3, x=95.0, y=540.0),
-            Enemy(id=4, x=540.0, y=540.0),
+            Enemy(index, x, y) for index, (x, y) in enumerate(coordinates, start=1)
         ]
+
         observation = self._get_obs()
 
         if self.render_mode == "human":
@@ -124,9 +129,15 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
             self.player_angle -= 0.08
 
         elif action == 2:
+            # if (
+            #     0.70 < self.player_angle < 0.90
+            #     or 5.35 < self.player_angle < 5.55
+            #     or 3.9 < self.player_angle < 4.1
+            #     or 2.2 < self.player_angle < 2.4
+            # ):
             if gun["animation"] == False and self.ammo_count > 0:
                 gun["animation"] = True
-                self.ammo_count -= 1
+                # self.ammo_count -= 1
 
                 enemy_dead_status = [enemy.dead for enemy in self.enemies]
                 if False in enemy_dead_status:
@@ -295,6 +306,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                             sprite.death_count = 0
                             sprite.dx = 0
                             sprite.dy = 0
+                            self.enemies_death_count += 1
                             self.reward += 100
                             self._regenerate_enemies(index)
                 # Enemy Dead
@@ -304,7 +316,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                     sprite.death_count = 0
                     sprite.dx = 0
                     sprite.dy = 0
-                    self.reward += 10
+                    self.reward += 100
+                    self.enemies_death_count += 1
                     self._regenerate_enemies(index)
 
                 # Shoot & Enemy Dead
@@ -319,7 +332,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                         sprite.death_count = 0
                         sprite.dx = 0
                         sprite.dy = 0
-                        self.reward += 10
+                        self.reward += 100
+                        self.enemies_death_count += 1
                         self._regenerate_enemies(index)
 
                     except:
@@ -329,7 +343,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                     if sprite.death_count >= 32:
                         sprite.dead = True
                         sprite.death_count = 0
-                        self.reward += 10
+                        self.reward += 100
+                        self.enemies_death_count += 1
 
                 if not sprite.dead and sprite_distance <= 10:
                     self.reward -= 1000
