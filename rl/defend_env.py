@@ -7,7 +7,7 @@ from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees
 from src.enemy import Enemy
 from collections import namedtuple
-from src.textures import background, gun, textures, soldier_death
+from src.textures import background, gun, textures
 
 Point = namedtuple("Point", ("x", "y"))
 
@@ -16,10 +16,6 @@ coordinates = [
     Point(540.0, 95.0),
     Point(95.0, 540.0),
     Point(540.0, 540.0),
-    # Point(95.0, 222.0),
-    # Point(222.0, 95.0),
-    # Point(222.0, 540.0),
-    # Point(540.0, 222.0),
 ]
 
 
@@ -58,10 +54,9 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.player_x = 320.0
         self.player_y = 320.0
         self.player_angle = 1.5
-        self.ammo_count = 200
+        self.ammo_count = 100
         self.player_health = 100
         self.zbuffer = []
-        self.enemies_death_count = 0
 
     def _get_obs(self):
         obs_array = []
@@ -75,15 +70,20 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def _get_info(self):
         return {}
 
-    def _regenerate_enemies(self, index):
+    def _regenerate_enemies(self, index: int) -> None:
         self.enemies = list(filter(lambda enemy: (enemy.id != index), self.enemies))
         x, y = coordinates[index - 1]
         self.enemies.append(Enemy(index, x, y))
         self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
-    def reset(self):
-        print(self.enemies_death_count)
-        self.enemies_death_count = 0
+    def _enemy_hit(self, enemy: Enemy, index: int) -> None:
+        enemy.dead = True
+        enemy.death_count = 0
+        enemy.dx = 0
+        enemy.dy = 0
+        self._regenerate_enemies(index)
+
+    def reset(self) -> None:
         self.zbuffer = []
         self.reward = 0
         self.done = False
@@ -91,7 +91,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.player_y = 320.0
         self.player_angle = 1.5
         self.player_health = 100
-        self.ammo_count = 200
+        self.ammo_count = 100
         self.enemies = [
             Enemy(index, x, y) for index, (x, y) in enumerate(coordinates, start=1)
         ]
@@ -129,19 +129,13 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
             self.player_angle -= 0.08
 
         elif action == 2:
-            # if (
-            #     0.70 < self.player_angle < 0.90
-            #     or 5.35 < self.player_angle < 5.55
-            #     or 3.9 < self.player_angle < 4.1
-            #     or 2.2 < self.player_angle < 2.4
-            # ):
             if gun["animation"] == False and self.ammo_count > 0:
                 gun["animation"] = True
-                # self.ammo_count -= 1
+                self.ammo_count -= 1
 
-                enemy_dead_status = [enemy.dead for enemy in self.enemies]
-                if False in enemy_dead_status:
-                    self.reward -= 0.1
+                # enemy_dead_status = [enemy.dead for enemy in self.enemies]
+                # if False in enemy_dead_status:
+                #     self.reward -= 0.1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -249,109 +243,55 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
             # increment angle
             current_angle -= STEP_ANGLE
 
-        # position & scale sprites
-        for index, sprite in enumerate(self.enemies, start=1):
-            sprite_x = sprite.x - self.player_x
-            sprite_y = sprite.y - self.player_y
-            sprite_distance = sqrt(sprite_x * sprite_x + sprite_y * sprite_y)
-            sprite2player_angle = atan2(sprite_x, sprite_y)
+        # position & scale enemies
+        for index, enemy in enumerate(self.enemies, start=1):
+            distance_x = enemy.x - self.player_x
+            distance_y = enemy.y - self.player_y
+            distance = sqrt(distance_x * distance_x + distance_y * distance_y)
+            sprite2player_angle = atan2(distance_x, distance_y)
             player2sprite_angle = sprite2player_angle - self.player_angle
 
-            if sprite_x < 0:
+            if distance_x < 0:
                 player2sprite_angle += DOUBLE_PI
-            if sprite_x > 0 and degrees(player2sprite_angle) <= -180:
+            if distance_x > 0 and degrees(player2sprite_angle) <= -180:
                 player2sprite_angle += DOUBLE_PI
-            if sprite_x < 0 and degrees(player2sprite_angle) >= 180:
+            if distance_x < 0 and degrees(player2sprite_angle) >= 180:
                 player2sprite_angle -= DOUBLE_PI
+
             shift_rays = player2sprite_angle / STEP_ANGLE
             sprite_ray = CENTRAL_RAY - shift_rays
 
-            if (
-                sprite.type in ["lamp", "light"]
-                or sprite.type == "soldier"
-                and sprite.dead == True
-            ):
-                sprite_height = min(
-                    sprite.scale * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
-                )
-            else:
-                sprite_height = (
-                    sprite.scale * MAP_SCALE * 300 / (sprite_distance + 0.0001)
-                )
-            if sprite.type == "soldier":
-                if not sprite.dead:
-                    if sprite.x < self.player_x and sprite.dx < 0:
-                        sprite.dx *= 1
-                    elif sprite.x > self.player_x and sprite.dx > 0:
-                        sprite.dx *= -1
+            sprite_height = (
+                min(enemy.scale * MAP_SCALE * 300 / (distance + 0.0001), 400)
+                if enemy.dead == True
+                else enemy.scale * MAP_SCALE * 300 / (distance + 0.0001)
+            )
 
-                    if sprite.y < self.player_y and sprite.dy < 0:
-                        sprite.dy *= 1
-                    elif sprite.y > self.player_y and sprite.dy > 0:
-                        sprite.dy *= -1
+            if not enemy.dead:
+                if enemy.x < self.player_x and enemy.dx < 0:
+                    enemy.dx *= 1
+                elif enemy.x > self.player_x and enemy.dx > 0:
+                    enemy.dx *= -1
 
-                    sprite.x += sprite.dx
-                    sprite.y += sprite.dy
+                if enemy.y < self.player_y and enemy.dy < 0:
+                    enemy.dy *= 1
+                elif enemy.y > self.player_y and enemy.dy > 0:
+                    enemy.dy *= -1
 
-                    # Shoot & Enemy Dead
-                    if (
-                        abs(shift_rays) < 20
-                        and sprite_distance < 500
-                        and gun["animation"]
-                    ):
-                        sprite.image = soldier_death[int(sprite.death_count / 8)]
-                        sprite.death_count += 1
-                        if sprite.death_count >= 16:
-                            sprite.dead = True
-                            sprite.death_count = 0
-                            sprite.dx = 0
-                            sprite.dy = 0
-                            self.enemies_death_count += 1
-                            self.reward += 100
-                            self._regenerate_enemies(index)
-                # Enemy Dead
-                else:
-                    sprite.image = soldier_death[-1]
-                    sprite.dead = True
-                    sprite.death_count = 0
-                    sprite.dx = 0
-                    sprite.dy = 0
-                    self.reward += 100
-                    self.enemies_death_count += 1
-                    self._regenerate_enemies(index)
+                enemy.x += enemy.dx
+                enemy.y += enemy.dy
 
                 # Shoot & Enemy Dead
-                if gun["shot_count"] > 16 and sprite.image in [
-                    soldier_death[0],
-                    soldier_death[1],
-                    soldier_death[2],
-                ]:
-                    try:
-                        sprite.image = soldier_death[int(sprite.death_count / 8) + 2]
-                        sprite.dead = True
-                        sprite.death_count = 0
-                        sprite.dx = 0
-                        sprite.dy = 0
-                        self.reward += 100
-                        self.enemies_death_count += 1
-                        self._regenerate_enemies(index)
+                if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
+                    enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
+                    enemy.death_count += 1
 
-                    except:
-                        pass
-                    sprite.death_count += 1
+                    if enemy.death_count >= 16:
+                        self._enemy_hit(enemy, index)
 
-                    if sprite.death_count >= 32:
-                        sprite.dead = True
-                        sprite.death_count = 0
-                        self.reward += 100
-                        self.enemies_death_count += 1
-
-                if not sprite.dead and sprite_distance <= 10:
-                    self.reward -= 1000
-                    self.player_health -= 20
-                    sprite.dead = True
-                    sprite.dx = 0
-                    sprite.dy = 0
+                if distance <= 10:
+                    self.reward = -1000
+                    self.player_health -= 25
 
                     # Remove that enemy & Add that enemy to the bounday
                     self._regenerate_enemies(index)
@@ -359,21 +299,46 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                     if self.player_health <= 0:
                         self.done = True
 
+            # Enemy Dead
+            else:
+                enemy.image = enemy.death_animation_list[-1]
+                self._enemy_hit(enemy, index)
+
+            # Shoot & Enemy Dead
+            if gun["shot_count"] > 16 and enemy.image in [
+                enemy.death_animation_list[0],
+                enemy.death_animation_list[1],
+                enemy.death_animation_list[2],
+            ]:
+                try:
+                    enemy.image = enemy.death_animation_list[
+                        int(enemy.death_count / 8) + 2
+                    ]
+                    self._enemy_hit(enemy, index)
+
+                except:
+                    pass
+                enemy.death_count += 1
+
+                if enemy.death_count >= 32:
+                    enemy.dead = True
+                    enemy.death_count = 0
+
             sprite_image = pygame.transform.scale(
-                sprite.image, (int(sprite_height), int(sprite_height))
+                enemy.image, (int(sprite_height), int(sprite_height))
             )
 
             self.zbuffer.append(
                 {
                     "image": sprite_image,
                     "x": sprite_ray - int(sprite_height / 2),
-                    "y": 100 - sprite_height * sprite.shift,
-                    "distance": sprite_distance,
+                    "y": 100 - sprite_height * enemy.shift,
+                    "distance": distance,
                 }
             )
 
         if not self.done:
-            self.reward += 1
+            self.reward = 0.1
 
         observation = self._get_obs()
         reward = self.reward

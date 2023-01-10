@@ -14,7 +14,7 @@ def train_model(env, total_steps, save_frequency=100000):
         env,
         verbose=1,
         tensorboard_log=LOG_DIR,
-        # learning_rate=0.0002,
+        learning_rate=0.0002,
     )
 
     model.learn(total_timesteps=total_steps, callback=callback)

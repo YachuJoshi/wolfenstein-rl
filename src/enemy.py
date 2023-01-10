@@ -14,3 +14,16 @@ class Enemy:
         self.dy = 0.2
         self.death_count = 0
         self.image = enemy.subsurface(0, 0, 64, 64)
+        self.death_animation_list = [
+            enemy.subsurface(frame * 64, 5 * 64, 64, 64) for frame in range(1, 5)
+        ]
+
+    def __str__(self):
+        return f"""
+                Enemy: {self.id} -> {self.dead}
+                """
+
+    def __repr__(self):
+        return f"""
+                Enemy: {self.id} -> {self.dead}
+                """
