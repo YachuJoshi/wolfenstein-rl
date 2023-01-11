@@ -13,7 +13,8 @@ DOUBLE_PI = 2 * pi
 
 # map
 # MAP_SIZE = 22  # -> BASIC
-MAP_SIZE = 10  # -> DEFEND
+# MAP_SIZE = 10  # -> DEFEND
+MAP_SIZE = 22  # -> DEADLY CORRIDOR
 MAP_SCALE = 64
 MAP_RANGE = MAP_SIZE * MAP_SCALE
 MAP_SPEED = (MAP_SCALE / 2) / 10
@@ -71,4 +72,12 @@ MAP = MAP_DEFEND = list(
     "B        E"
     "B        E"
     "SSSSSSSSSS"
+)
+
+MAP_DEADLY_CORRIDOR = list(
+    "SSSSSSSSSSSSSSSSSSSSSS"
+    "S     SS             S"
+    "S                    S"
+    "S         SS         S"
+    "SSSSSSSSSSSSSSSSSSSSSS"
 )

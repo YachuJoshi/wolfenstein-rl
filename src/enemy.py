@@ -2,7 +2,7 @@ from src.textures import enemy
 
 
 class Enemy:
-    def __init__(self, id, x, y):
+    def __init__(self, id: int, x: float, y: float, static=False):
         self.id = id
         self.x = x
         self.y = y
@@ -10,8 +10,8 @@ class Enemy:
         self.scale = 1.0
         self.type = "soldier"
         self.dead = False
-        self.dx = 0.2
-        self.dy = 0.2
+        self.dx = 0 if static else 0.2
+        self.dy = 0 if static else 0.2
         self.death_count = 0
         self.image = enemy.subsurface(0, 0, 64, 64)
         self.death_animation_list = [

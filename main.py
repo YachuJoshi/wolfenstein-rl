@@ -1,10 +1,10 @@
-from rl.defend_env import WolfensteinDefendTheCenterEnv
+from rl.deadly_corridor.env import WolfensteinDeadlyCorridorEnv
 from rl.train import train_model
 from rl.test import test_model
 
 # Training
-env = WolfensteinDefendTheCenterEnv()
-train_model(env=env, total_steps=5000000)
+env = WolfensteinDeadlyCorridorEnv()
+# train_model(env=env, total_steps=5000000)
 
 # Testing
 # env = WolfensteinDefendTheCenterEnv(render_mode="human")
