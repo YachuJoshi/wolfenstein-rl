@@ -6,7 +6,7 @@ from src.screen import window, clock
 from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees
+from math import sin, cos, sqrt, atan2, degrees, dist
 from src.textures import background, gun, textures
 
 
@@ -35,10 +35,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         obs_high = np.ones(shape) * np.inf
 
         # [
-        #   enemyOneXPositionDiff, enemyOneYPositionDiff,
-        #   enemyTwoXPositionDiff, enemyTwoYPositionDiff,
-        #   enemyThreeXPositionDiff, enemyThreeYPositionDiff,
-        #   enemyFourXPositionDiff, enemyFourYPositionDiff,
+        #   enemyOnePositionDiff, enemyTwoPositionDiff,
+        #   enemyThreePositionDiff, enemyFourPositionDiff,
         #   ammoCount
         #  ]
 
@@ -61,10 +59,10 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.zbuffer = []
 
     def _get_obs(self):
-        obs_array = []
-        for enemy in self.enemies:
-            obs_array.append(self.player_x - enemy.x)
-            obs_array.append(self.player_y - enemy.y)
+        obs_array = [
+            dist((self.player_x, self.player_y), (enemy.x, enemy.y))
+            for enemy in self.enemies
+        ]
         obs_array.append(self.ammo_count)
 
         return np.array(obs_array)
