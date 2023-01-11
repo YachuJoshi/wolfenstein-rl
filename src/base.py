@@ -75,9 +75,9 @@ MAP_DEFEND = list(
 
 MAP_DEADLY_CORRIDOR = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
-    "S     SS             S"
+    "S     SS       SS    S"
     "S                    S"
-    "S         SS         S"
+    "S         SS     S   S"
     "SSSSSSSSSSSSSSSSSSSSSS"
 )
 
@@ -102,6 +102,6 @@ MAP_LIST = [
 
 def get_map_details(map_name: str):
     map = list(filter(lambda map_item: map_item["name"] == map_name, MAP_LIST))[0]
-    MAP_RANGE = map["map_size"] * MAP_SCALE
-    MAP_SPEED = (MAP_SCALE / 2) / 10
+    MAP_RANGE: float = map["map_size"] * MAP_SCALE
+    MAP_SPEED: float = (MAP_SCALE / 2) / 10
     return (map["map"], map["map_size"], MAP_RANGE, MAP_SPEED)

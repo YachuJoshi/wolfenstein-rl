@@ -168,15 +168,11 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 if current_sin <= 0:
                     map_x += direction_x
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP_DEFEND)):
+                if target_square not in range(len(MAP)):
                     break
-                if MAP_DEFEND[target_square] not in " e":
-                    texture_y = (
-                        MAP_DEFEND[target_square]
-                        if MAP_DEFEND[target_square] != "T"
-                        else "I"
-                    )
-                    if MAP_DEFEND[target_square] == "E":
+                if MAP[target_square] not in " e":
+                    texture_y = MAP[target_square] if MAP[target_square] != "T" else "I"
+                    if MAP[target_square] == "E":
                         target_x += direction_x * 32
                         vertical_depth = (target_x - self.player_x) / current_sin
                         target_y = self.player_y + vertical_depth * current_cos
@@ -196,15 +192,11 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 if current_cos <= 0:
                     map_y += direction_y
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP_DEFEND)):
+                if target_square not in range(len(MAP)):
                     break
-                if MAP_DEFEND[target_square] not in " e":
-                    texture_x = (
-                        MAP_DEFEND[target_square]
-                        if MAP_DEFEND[target_square] != "O"
-                        else "J"
-                    )
-                    if MAP_DEFEND[target_square] == "E":
+                if MAP[target_square] not in " e":
+                    texture_x = MAP[target_square] if MAP[target_square] != "O" else "J"
+                    if MAP[target_square] == "E":
                         target_y += direction_y * 32
                         horizontal_depth = (target_y - self.player_y) / current_cos
                         target_x = self.player_x + horizontal_depth * current_sin

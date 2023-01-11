@@ -121,7 +121,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_angle -= 0.08
 
         elif action == 2:
-            if MAP_DEADLY_CORRIDOR[target_x] in " e":
+            if MAP[target_x] in " e":
                 self.player_x += offset_x
             # if MAP_DEADLY_CORRIDOR[target_y] in " e":
             #     self.player_y += offset_y

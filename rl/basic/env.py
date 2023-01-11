@@ -93,10 +93,10 @@ class WolfensteinBasicEnv(gym.Env):
             target_x = int(self.player_y / MAP_SCALE) * MAP_SIZE + int(
                 (self.player_x - offset_x - distance_thresh_x) / MAP_SCALE
             )
-            if MAP_BASIC[target_x] in " e":
+            if MAP[target_x] in " e":
                 self.player_x += offset_y
 
-            if MAP_BASIC[target_y] in " e":
+            if MAP[target_y] in " e":
                 self.player_y -= offset_x
 
         elif action == 1:
@@ -104,9 +104,9 @@ class WolfensteinBasicEnv(gym.Env):
                 (self.player_x + offset_x + distance_thresh_x) / MAP_SCALE
             )
 
-            if MAP_BASIC[target_x] in " e":
+            if MAP[target_x] in " e":
                 self.player_x -= offset_y
-            if MAP_BASIC[target_y] in " e":
+            if MAP[target_y] in " e":
                 self.player_y += offset_x
 
         elif action == 2:
@@ -144,15 +144,11 @@ class WolfensteinBasicEnv(gym.Env):
                 if current_sin <= 0:
                     map_x += direction_x
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP_BASIC)):
+                if target_square not in range(len(MAP)):
                     break
-                if MAP_BASIC[target_square] not in " e":
-                    texture_y = (
-                        MAP_BASIC[target_square]
-                        if MAP_BASIC[target_square] != "T"
-                        else "I"
-                    )
-                    if MAP_BASIC[target_square] == "E":
+                if MAP[target_square] not in " e":
+                    texture_y = MAP[target_square] if MAP[target_square] != "T" else "I"
+                    if MAP[target_square] == "E":
                         target_x += direction_x * 32
                         vertical_depth = (target_x - self.player_x) / current_sin
                         target_y = self.player_y + vertical_depth * current_cos
@@ -172,15 +168,11 @@ class WolfensteinBasicEnv(gym.Env):
                 if current_cos <= 0:
                     map_y += direction_y
                 target_square = map_y * MAP_SIZE + map_x
-                if target_square not in range(len(MAP_BASIC)):
+                if target_square not in range(len(MAP)):
                     break
-                if MAP_BASIC[target_square] not in " e":
-                    texture_x = (
-                        MAP_BASIC[target_square]
-                        if MAP_BASIC[target_square] != "O"
-                        else "J"
-                    )
-                    if MAP_BASIC[target_square] == "E":
+                if MAP[target_square] not in " e":
+                    texture_x = MAP[target_square] if MAP[target_square] != "O" else "J"
+                    if MAP[target_square] == "E":
                         target_y += direction_y * 32
                         horizontal_depth = (target_y - self.player_y) / current_cos
                         target_x = self.player_x + horizontal_depth * current_sin

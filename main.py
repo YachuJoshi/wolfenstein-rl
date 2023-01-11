@@ -1,11 +1,11 @@
-from rl.basic.env import WolfensteinBasicEnv
+from rl.defend.env import WolfensteinDefendTheCenterEnv
 from rl.train import train_model
 from rl.test import test_model
 
 # Training
 
-# env = WolfensteinBasicEnv()
-# train_model(env=env, total_steps=5000000)
+env = WolfensteinDefendTheCenterEnv()
+train_model(env=env, total_steps=5000000)
 
 # Testing
 
