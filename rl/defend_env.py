@@ -3,10 +3,10 @@ import pygame
 import numpy as np
 from src.base import *
 from src.screen import window, clock
-from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees
 from src.enemy import Enemy
 from collections import namedtuple
+from gym.spaces import Box, Discrete
+from math import sin, cos, sqrt, atan2, degrees
 from src.textures import background, gun, textures
 
 Point = namedtuple("Point", ("x", "y"))
@@ -33,10 +33,10 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         obs_high = np.ones(shape) * np.inf
 
         # [
-        #   enemyOneXPosition, enemyOneYPosition,
-        #   enemyTwoXPosition, enemyTwoYPosition,
-        #   enemyThreeXPosition, enemyThreeYPosition,
-        #   enemyFourXPosition, enemyFourYPosition,
+        #   enemyOneXPositionDiff, enemyOneYPositionDiff,
+        #   enemyTwoXPositionDiff, enemyTwoYPositionDiff,
+        #   enemyThreeXPositionDiff, enemyThreeYPositionDiff,
+        #   enemyFourXPositionDiff, enemyFourYPositionDiff,
         #   ammoCount
         #  ]
 
@@ -61,8 +61,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def _get_obs(self):
         obs_array = []
         for enemy in self.enemies:
-            obs_array.append(enemy.x)
-            obs_array.append(enemy.y)
+            obs_array.append(self.player_x - enemy.x)
+            obs_array.append(self.player_y - enemy.y)
         obs_array.append(self.ammo_count)
 
         return np.array(obs_array)
@@ -83,7 +83,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         enemy.dy = 0
         self._regenerate_enemies(index)
 
-    def reset(self) -> None:
+    def reset(self):
         self.zbuffer = []
         self.reward = 0
         self.done = False
