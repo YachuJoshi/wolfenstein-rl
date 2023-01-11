@@ -93,7 +93,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.player_health = 100
         self.ammo_count = 100
         self.enemies = [
-            Enemy(index, x, y) for index, (x, y) in enumerate(coordinates, start=1)
+            Enemy(id=index, x=x, y=y, static=False)
+            for index, (x, y) in enumerate(coordinates, start=1)
         ]
 
         observation = self._get_obs()

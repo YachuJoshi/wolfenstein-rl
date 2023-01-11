@@ -2,7 +2,7 @@ from src.textures import enemy
 
 
 class Enemy:
-    def __init__(self, id: int, x: float, y: float, static=False):
+    def __init__(self, id: int, x: float, y: float, static: bool = True):
         self.id = id
         self.x = x
         self.y = y
