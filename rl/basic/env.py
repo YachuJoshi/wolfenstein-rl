@@ -3,10 +3,12 @@ import pygame
 import numpy as np
 from src.base import *
 from src.screen import window, clock
-from gym.spaces import Box, Discrete
 from src.enemy import Enemy
-from math import sin, cos, sqrt, atan2, degrees, pi
+from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
+from math import sin, cos, sqrt, atan2, degrees, pi
+
+MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("BASIC")
 
 
 class WolfensteinBasicEnv(gym.Env):

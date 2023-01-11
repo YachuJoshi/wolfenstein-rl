@@ -9,10 +9,11 @@ from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
 from math import sin, cos, sqrt, atan2, degrees, dist
 
-Point = namedtuple("Point", ("x", "y"))
 
+Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
 GEM_POSITION = {"x": 1260, "y": 182}
+MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY")
 
 
 class WolfensteinDeadlyCorridorEnv(gym.Env):

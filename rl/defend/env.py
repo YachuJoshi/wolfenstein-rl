@@ -9,14 +9,16 @@ from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees
 from src.textures import background, gun, textures
 
-Point = namedtuple("Point", ("x", "y"))
 
+Point = namedtuple("Point", ("x", "y"))
 coordinates = [
     Point(95.0, 95.0),
     Point(540.0, 95.0),
     Point(95.0, 540.0),
     Point(540.0, 540.0),
 ]
+
+MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")
 
 
 class WolfensteinDefendTheCenterEnv(gym.Env):
