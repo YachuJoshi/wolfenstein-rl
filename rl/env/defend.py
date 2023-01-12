@@ -6,8 +6,8 @@ from src.screen import window, clock
 from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees, dist
 from src.textures import background, gun, textures
+from math import sin, cos, sqrt, atan2, degrees, dist
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -30,7 +30,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def __init__(self, render_mode=None):
         super(WolfensteinDefendTheCenterEnv, self).__init__()
 
-        shape = (9,)
+        shape = (5,)
         obs_low = np.ones(shape) * -np.inf
         obs_high = np.ones(shape) * np.inf
 
@@ -73,7 +73,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def _regenerate_enemies(self, index: int) -> None:
         self.enemies = list(filter(lambda enemy: (enemy.id != index), self.enemies))
         x, y = coordinates[index - 1]
-        self.enemies.append(Enemy(index, x, y))
+        self.enemies.append(Enemy(index, x, y, False))
         self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
     def _enemy_hit(self, enemy: Enemy, index: int) -> None:
@@ -291,7 +291,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
                     if self.player_health <= 0:
                         self.done = True
-
             # Enemy Dead
             else:
                 enemy.image = enemy.death_animation_list[-1]
