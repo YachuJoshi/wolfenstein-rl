@@ -2,7 +2,14 @@ from src.textures import enemy
 
 
 class Enemy:
-    def __init__(self, id: int, x: float, y: float, static: bool = True):
+    def __init__(
+        self,
+        id: int,
+        x: float,
+        y: float,
+        static: bool = True,
+        is_attacking: bool = False,
+    ):
         self.id = id
         self.x = x
         self.y = y
@@ -13,9 +20,14 @@ class Enemy:
         self.dx = 0 if static else 0.2
         self.dy = 0 if static else 0.2
         self.death_count = 0
+        self.attack_index = 0
+        self.is_attacking = is_attacking
         self.image = enemy.subsurface(0, 0, 64, 64)
         self.death_animation_list = [
             enemy.subsurface(frame * 64, 5 * 64, 64, 64) for frame in range(1, 5)
+        ]
+        self.attack_animation_list = [
+            enemy.subsurface(frame * 64, 6 * 64, 64, 64) for frame in range(1, 3)
         ]
 
     def __str__(self):

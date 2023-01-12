@@ -1,8 +1,8 @@
 from rl.callback import TrainAndLoggingCallback
 from stable_baselines3 import PPO
 
-LOG_DIR = "./logs/defend"
-CHECKPOINT_DIR = "./models/defend"
+LOG_DIR = "./logs/deadly"
+CHECKPOINT_DIR = "./models/deadly"
 
 
 def train_model(env, total_steps, save_frequency=100000):

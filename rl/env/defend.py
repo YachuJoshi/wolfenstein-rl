@@ -81,6 +81,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         enemy.death_count = 0
         enemy.dx = 0
         enemy.dy = 0
+        self.reward = 100
         self._regenerate_enemies(index)
 
     def reset(self):
@@ -107,18 +108,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def step(self, action):
         self.done = False
 
-        offset_x = sin(self.player_angle) * MAP_SPEED
-        offset_y = cos(self.player_angle) * MAP_SPEED
-        distance_thresh_x = 20 if offset_x > 0 else -20
-        distance_thresh_y = 20 if offset_y > 0 else -20
-
-        target_x = int(self.player_y / MAP_SCALE) * MAP_SIZE + int(
-            (self.player_x + offset_x + distance_thresh_x) / MAP_SCALE
-        )
-        target_y = int(
-            (self.player_y + offset_y + distance_thresh_y) / MAP_SCALE
-        ) * MAP_SIZE + int(self.player_x / MAP_SCALE)
-
         # 0 -> Turn Left
         # 1 -> Turn Right
         # 2 -> Attack
@@ -133,10 +122,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
             if gun["animation"] == False and self.ammo_count > 0:
                 gun["animation"] = True
                 self.ammo_count -= 1
-
-                # enemy_dead_status = [enemy.dead for enemy in self.enemies]
-                # if False in enemy_dead_status:
-                #     self.reward -= 0.1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
