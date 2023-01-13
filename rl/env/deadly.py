@@ -270,7 +270,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                         enemy.attack_index = 0
 
                     if np.random.rand() < 0.2:
-                        self.player_health -= 0.2
+                        self.player_health -= 0.4
 
                 # Shoot & Enemy Dead
                 if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
@@ -334,8 +334,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_x >= GEM_POSITION["x"] - 20
         ):
             self.done = True
-
-        print(self.enemy_death_count)
 
         observation = self._get_obs()
         reward = self.reward

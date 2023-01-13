@@ -1,19 +1,20 @@
 from rl.callback import TrainAndLoggingCallback
 from stable_baselines3 import PPO
 
-LOG_DIR = "./logs/deadly"
-CHECKPOINT_DIR = "./models/deadly"
 
-
-def train_model(env, total_steps, save_frequency=100000):
-    callback = TrainAndLoggingCallback(
-        check_freq=save_frequency, save_path=CHECKPOINT_DIR
-    )
+def train(
+    env,
+    total_steps,
+    log_dir,
+    model_dir,
+    save_frequency=100000,
+):
+    callback = TrainAndLoggingCallback(check_freq=save_frequency, save_path=model_dir)
     model = PPO(
         "MlpPolicy",
         env,
         verbose=1,
-        tensorboard_log=LOG_DIR,
+        tensorboard_log=log_dir,
         learning_rate=0.0002,
     )
 

@@ -20,7 +20,7 @@ def test_random(env, episodes=10):
     env.close()
 
 
-def test_model(env, model_path, episodes=10):
+def test(env, model_path, episodes=10):
     model = PPO.load(model_path)
 
     for episode in range(1, episodes + 1):
