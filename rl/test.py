@@ -27,17 +27,18 @@ def test(env, model_path, episodes=10):
     for episode in range(1, episodes + 1):
         observation = env.reset()
         done = False
-        reward = 0
+        total_reward = 0
 
         while True:
             env.render()
             action, _state = model.predict(observation)
             observation, reward, done, _info = env.step(action)
+            total_reward += reward
 
             if done:
                 break
 
         time.sleep(0.5)
-        print(f"Episode {episode}, Total Reward: {reward}")
+        print(f"Episode {episode}, Total Reward: {total_reward}")
 
     env.close()

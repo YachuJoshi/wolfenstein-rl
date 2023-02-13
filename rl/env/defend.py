@@ -14,8 +14,10 @@ from math import sin, cos, sqrt, atan2, degrees, dist
 FILE_PATH = "images/sprites"
 bullet = pygame.image.load(os.path.join(FILE_PATH, "bullet.png")).convert_alpha()
 heart = pygame.image.load(os.path.join(FILE_PATH, "heart.png")).convert_alpha()
+head = pygame.image.load(os.path.join(FILE_PATH, "head.png")).convert_alpha()
 bullet_rect = bullet.get_rect(topright=(WIDTH - 50, 10))
 heart_rect = heart.get_rect(topleft=(10, 10))
+head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -32,7 +34,7 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")
 class WolfensteinDefendTheCenterEnv(gym.Env):
     metadata = {
         "render_modes": ["human"],
-        "render_fps": 60,
+        "render_fps": 120,
     }
 
     def __init__(self, render_mode=None):
@@ -65,6 +67,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.ammo_count = 100
         self.player_health = 100
         self.zbuffer = []
+        self.kill_count = 0
 
     def _get_obs(self):
         obs_array = [
@@ -85,6 +88,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
     def _enemy_hit(self, enemy: Enemy, index: int) -> None:
+        self.kill_count += 1
         enemy.dead = True
         enemy.death_count = 0
         enemy.dx = 0
@@ -94,6 +98,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
     def reset(self):
         self.zbuffer = []
+        self.kill_count = 0
         self.reward = 0
         self.done = False
         self.player_x = 320.0
@@ -267,13 +272,22 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 enemy.x += enemy.dx
                 enemy.y += enemy.dy
 
+                enemy.image = enemy.diagonal_walking_animation_list[
+                    int(enemy.walk_index / 8)
+                ]
+                enemy.walk_index += 1.5
+
+                if enemy.walk_index > 8 * len(enemy.diagonal_walking_animation_list):
+                    enemy.walk_index = 0
+
                 # Shoot & Enemy Dead
                 if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
-                    enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
-                    enemy.death_count += 1
+                    # enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
+                    # enemy.death_count += 1
 
-                    if enemy.death_count >= 16:
-                        self._enemy_hit(enemy, index)
+                    self._enemy_hit(enemy, index)
+                    # if enemy.death_count >= 16:
+                    #     print("DEAD", 284)
 
                 if distance <= 10:
                     self.reward = -1000
@@ -286,8 +300,8 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                         self.done = True
             # Enemy Dead
             else:
-                enemy.image = enemy.death_animation_list[-1]
                 self._enemy_hit(enemy, index)
+                enemy.image = enemy.death_animation_list[-1]
 
             # Shoot & Enemy Dead
             if gun["shot_count"] > 16 and enemy.image in [
@@ -296,10 +310,10 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 enemy.death_animation_list[2],
             ]:
                 try:
-                    enemy.image = enemy.death_animation_list[
-                        int(enemy.death_count / 8) + 2
-                    ]
                     self._enemy_hit(enemy, index)
+                    # enemy.image = enemy.death_animation_list[
+                    #     int(enemy.death_count / 8) + 2
+                    # ]
 
                 except:
                     pass
@@ -341,16 +355,22 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
     def _render_frame(self):
         self.window.blit(background, (0, 0))
+        self.window.blit(head, head_rect)
+        self.window.blit(heart, heart_rect)
+        self.window.blit(bullet, bullet_rect)
+
         health = font.render(f": {self.player_health}", False, "white")
         health_bounding_rect = health.get_rect(topleft=(40, 10))
-        self.window.blit(heart, heart_rect)
 
         ammo_text = font.render(f": {self.ammo_count}", False, "white")
         ammo_bounding_rect = ammo_text.get_rect(topright=(WIDTH - 10, 10))
-        self.window.blit(bullet, bullet_rect)
+
+        kills_text = font.render(f": {int(self.kill_count)}", False, "white")
+        kills_bounding_rect = kills_text.get_rect(midtop=(WIDTH / 2 + 14, 10))
 
         self.window.blit(health, health_bounding_rect)
         self.window.blit(ammo_text, ammo_bounding_rect)
+        self.window.blit(kills_text, kills_bounding_rect)
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
         for item in self.zbuffer:
