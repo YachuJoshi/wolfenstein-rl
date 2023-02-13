@@ -26,26 +26,14 @@ def get_dir(level):
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
-    if level == "basic":
-        return ("./logs/basic", f"./models/basic")
-
-    if level == "defend":
-        return ("./logs/defend", f"./models/defend")
-
-    return ("./logs/deadly", f"./models/deadly")
+    return f"./logs/{level}", f"./models/{level}"
 
 
 def get_model_dir(level, steps):
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
-    if level == "basic":
-        return f"./models/basic/model_{steps}"
-
-    if level == "defend":
-        return f"./models/defend/model_{steps}"
-
-    return f"./models/deadly/model_{steps}"
+    return f"./models/{level}/model_{steps}"
 
 
 if __name__ == "__main__":

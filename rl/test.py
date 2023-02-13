@@ -1,3 +1,4 @@
+import time
 from stable_baselines3 import PPO
 
 
@@ -36,6 +37,7 @@ def test(env, model_path, episodes=10):
             if done:
                 break
 
+        time.sleep(0.5)
         print(f"Episode {episode}, Total Reward: {reward}")
 
     env.close()

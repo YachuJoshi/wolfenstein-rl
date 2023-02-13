@@ -1,13 +1,21 @@
 import gym
+import os
 import pygame
 import numpy as np
 from src.base import *
 from src.screen import window, clock
+from src.font import font
 from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
 from math import sin, cos, sqrt, atan2, degrees, dist
+
+FILE_PATH = "images/sprites"
+bullet = pygame.image.load(os.path.join(FILE_PATH, "bullet.png")).convert_alpha()
+heart = pygame.image.load(os.path.join(FILE_PATH, "heart.png")).convert_alpha()
+bullet_rect = bullet.get_rect(topright=(WIDTH - 50, 10))
+heart_rect = heart.get_rect(topleft=(10, 10))
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -24,7 +32,7 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")
 class WolfensteinDefendTheCenterEnv(gym.Env):
     metadata = {
         "render_modes": ["human"],
-        "render_fps": 120,
+        "render_fps": 60,
     }
 
     def __init__(self, render_mode=None):
@@ -333,6 +341,16 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
     def _render_frame(self):
         self.window.blit(background, (0, 0))
+        health = font.render(f": {self.player_health}", False, "white")
+        health_bounding_rect = health.get_rect(topleft=(40, 10))
+        self.window.blit(heart, heart_rect)
+
+        ammo_text = font.render(f": {self.ammo_count}", False, "white")
+        ammo_bounding_rect = ammo_text.get_rect(topright=(WIDTH - 10, 10))
+        self.window.blit(bullet, bullet_rect)
+
+        self.window.blit(health, health_bounding_rect)
+        self.window.blit(ammo_text, ammo_bounding_rect)
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
         for item in self.zbuffer:
