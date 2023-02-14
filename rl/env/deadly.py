@@ -260,7 +260,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if enemy.is_attacking and distance < 360:
+                if enemy.is_attacking and distance < enemy.distance_threshold:
                     enemy.image = enemy.attack_animation_list[
                         int(enemy.attack_index / 8)
                     ]
@@ -273,7 +273,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                         self.player_health -= 0.4
 
                 # Shoot & Enemy Dead
-                if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
+                if (
+                    abs(shift_rays) < 20
+                    and distance < enemy.distance_threshold
+                    and gun["animation"]
+                ):
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
                     enemy.death_count += 1
 

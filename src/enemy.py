@@ -9,6 +9,7 @@ class Enemy:
         y: float,
         static: bool = True,
         is_attacking: bool = False,
+        distance_threshold: int = 360,
     ):
         self.id = id
         self.x = x
@@ -23,6 +24,7 @@ class Enemy:
         self.attack_index = 0
         self.walk_index = 0
         self.is_attacking = is_attacking
+        self.distance_threshold = distance_threshold
         self.image = enemy.subsurface(0, 0, 64, 64)
         self.death_animation_list = [
             enemy.subsurface(frame * 64, 5 * 64, 64, 64) for frame in range(1, 5)
