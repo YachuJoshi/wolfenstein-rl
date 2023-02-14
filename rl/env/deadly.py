@@ -50,7 +50,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.player_x = 86.0
         self.player_y = 160.0
         self.player_angle = INITIAL_ANGLE
-        self.ammo_count = 100
+        self.ammo_count = 50
         self.player_health = 100
         self.enemy_death_count = 0
         self.zbuffer = []
@@ -79,6 +79,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.reward = 0
         self.zbuffer = []
         self.done = False
+        self.ammo_count = 50
         self.player_x = 86.0
         self.player_y = 160.0
         self.player_health = 100
@@ -138,6 +139,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 3:
             if gun["animation"] == False:
                 gun["animation"] = True
+                self.ammo_count -= 1
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -337,6 +339,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_x >= GEM_POSITION["x"] - 20
         ):
             self.reward = 1000
+            self.done = True
+
+        if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
+            self.reward = -500
             self.done = True
 
         observation = self._get_obs()
