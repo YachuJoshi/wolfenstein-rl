@@ -40,7 +40,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
         )
 
-        self.action_space = Discrete(4)
+        self.action_space = Discrete(5)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -117,9 +117,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         # 0 -> Turn Left
         # 1 -> Turn Right
-        # 2 -> Move Forward
-        # 3 -> Attack
-        # print(self.player_x, self.player_y, self.player_angle)
+        # 2 -> Move Forward in MAP
+        # 3 -> Move Backward in MAP
+        # 4 -> Attack
 
         if action == 0:
             self.player_angle += 0.04
@@ -127,12 +127,14 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 1:
             self.player_angle -= 0.04
 
-        elif action == 2:
+        elif action == 2 and self.player_x < 1265.0:
             if MAP[target_x] in " e":
                 self.player_x += offset_x
             # if MAP_DEADLY_CORRIDOR[target_y] in " e":
             #     self.player_y += offset_y
-
+        elif action == 3 and self.player_x > 86.0:
+            if MAP[target_x] in " e":
+                self.player_x -= offset_x
         elif action == 3:
             if gun["animation"] == False:
                 gun["animation"] = True
@@ -331,12 +333,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.reward = -1000
             self.done = True
 
-        if self.player_x >= GEM_POSITION["x"] - 20:
-            self.reward = 1000
-
         if (self.enemy_death_count == len(self.enemies)) and (
             self.player_x >= GEM_POSITION["x"] - 20
         ):
+            self.reward = 1000
             self.done = True
 
         observation = self._get_obs()
