@@ -17,30 +17,30 @@ DOUBLE_PI = 2 * pi
 # MAP_SIZE = 22  # -> DEADLY CORRIDOR
 MAP_SCALE = 64
 
-# MAP = list(
-#     "SSSSSSSBBSBBBBBBBBBBBB"
-#     "S     SB             B"
-#     "S     SB   BBBBBB B  B"
-#     "S     SB       WB B  F"
-#     "SSTETSSSWWWW   WB BBBB"
-#     "S      SW      WB    B"
-#     "S     SSW      WB    B"
-#     "S     OBBBBB   WWB   B"
-#     "S     E   BB     B   B"
-#     "SSSSSSOB  SB     BTETS"
-#     "S     SB  BBBBB  BS  S"
-#     "S     SB         BS  S"
-#     "SSSSSSSBBBBBBBBBBBS  S"
-#     "DDDDDDDDDOSSSSSSSSO  S"
-#     "D        E        E  S"
-#     "D  DDDDDDOSSSSSSSSO  M"
-#     "D  DDXDXDXDDDS   SS  S"
-#     "D  D        DS       S"
-#     "D  D        SS       S"
-#     "D           SS       M"
-#     "D  D        DS       S"
-#     "DDDDDXDXDXDDDDSSSSSSSS"
-# )
+MAP_DEMO = list(
+    "SSSSSSSSSSSSSSSSSSSSSS"
+    "S     SS             S"
+    "S          SSSSSS S  S"
+    "S     SS       SS S  S"
+    "SSSSSSSSSSSS   SS SSSS"
+    "S      SS      SS    S"
+    "S      SS      SS    S"
+    "S              SSS   S"
+    "S         SS     S   S"
+    "SSSSSSS   SS     SSSSS"
+    "S         SSSSS  SS  S"
+    "S                SS  S"
+    "SSSSSSSSSSSSSSSSSSS  S"
+    "SSSSSSSSSSSSSSSSSSS  S"
+    "S        S        S  S"
+    "S  SSSSSSSSSSSSSSSS  S"
+    "S  SSSSSSSSSSS   SS  S"
+    "S  S        SS       S"
+    "S  S        SS       S"
+    "S           SS       S"
+    "S  S        SS       S"
+    "SSSSSSSSSSSSSSSSSSSSSS"
+)
 
 # "SSTETSSSWWWW   WS SSSS" -> Door
 
@@ -82,6 +82,11 @@ MAP_DEADLY_CORRIDOR = list(
 )
 
 MAP_LIST = [
+    {
+        "name": "DEMO",
+        "map": MAP_DEMO,
+        "map_size": 22,
+    },
     {
         "name": "BASIC",
         "map": MAP_BASIC,

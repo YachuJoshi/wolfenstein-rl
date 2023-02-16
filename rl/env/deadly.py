@@ -136,7 +136,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
                 self.player_x -= offset_x
-        elif action == 3:
+        elif action == 4:
             if gun["animation"] == False:
                 gun["animation"] = True
                 self.ammo_count -= 1

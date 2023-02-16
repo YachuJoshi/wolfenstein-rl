@@ -18,34 +18,34 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
 ### 1. For Training:
 
 ```bash
-python3 ./main.py {level}-train
+python3 ./main.py --level { basic | defend | deadly } --train
 ```
 
 ### 2. For Testing:
 
 ```bash
-python3 ./main.py {level}-test {steps}
+python3 ./main.py --level { basic | defend | deadly } --test --steps { steps }
 ```
 
-## Valid Level-Mode:
+## Valid Level Mode Command:
 
-1. basic-train
-2. basic-test
-3. defend-train
-4. defend-test
-5. deadly-train
-6. deadly-test
+1. --level basic --train
+2. --level basic --test --steps { steps }
+3. --level defend --train
+4. --level defend --test --steps { steps }
+5. --level deadly --train
+6. --level deadly --test --steps { steps }
 
 ## Examples:
 
 ### 1. To _train_ the model on basic level:
 
 ```bash
-python3 ./main.py basic-train
+python3 ./main.py --level basic --train
 ```
 
 ### 2. To _test_ the model trained for _200000_ steps on _DEFEND_ level:
 
 ```bash
-python3 ./main.py defend-test 200000
+python3 ./main.py --level defend --test --steps 200000
 ```

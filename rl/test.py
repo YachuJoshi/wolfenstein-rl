@@ -1,5 +1,5 @@
 import time
-from stable_baselines3 import PPO
+from rl.ppo import PPO
 
 
 def test_random(env, episodes=10):
