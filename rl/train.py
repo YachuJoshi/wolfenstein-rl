@@ -18,13 +18,14 @@ def train(
     total_steps,
     log_dir,
     model_dir,
+    policy="MlpPolicy",
     save_frequency=100000,
 ):
     device = get_device()
     callback = TrainAndLoggingCallback(check_freq=save_frequency, save_path=model_dir)
     model = PPO(
-        "MlpPolicy",
-        env,
+        policy=policy,
+        env=env,
         verbose=1,
         device=device,
         tensorboard_log=log_dir,

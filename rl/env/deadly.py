@@ -18,28 +18,16 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY")
 
 class WolfensteinDeadlyCorridorEnv(gym.Env):
     metadata = {
-        "render_modes": ["human"],
+        "render_modes": ["human", "rgb_array"],
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode=None, seed=42):
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
+        super().seed(seed)
 
-        shape = (7,)
-        obs_low = np.ones(shape) * -np.inf
-        obs_high = np.ones(shape) * np.inf
-
-        # [
-        #   enemyOnePositionDiff, enemyTwoPositionDiff,
-        #   enemyThreePositionDiff, enemyFourPositionDiff,
-        #   enemyFivePositionDiff, enemySixPositionDiff,
-        #   gemPositionDiff
-        #  ]
-
-        self.observation_space = Box(
-            low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
-        )
-
+        shape = (200, 320, 3)
+        self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
         self.action_space = Discrete(5)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -56,15 +44,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.zbuffer = []
 
     def _get_obs(self):
-        obs_array = [
-            dist((self.player_x, self.player_y), (enemy.x, enemy.y))
-            for enemy in self.enemies
-        ]
-        obs_array.append(
-            dist((self.player_x, self.player_y), (GEM_POSITION["x"], GEM_POSITION["y"]))
-        )
-
-        return np.array(obs_array)
+        return self._render_frame()
 
     def _get_info(self):
         return {}
@@ -102,6 +82,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return observation
 
     def step(self, action):
+        print(action)
         self.done = False
 
         offset_x = sin(INITIAL_ANGLE) * MAP_SPEED
@@ -355,8 +336,13 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return observation, reward, done, info
 
+    def _get_rgb(self):
+        return np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+        )
+
     def render(self):
-        if self.render_mode == "human":
+        if self.render_mode == "rgb_array":
             return self._render_frame()
 
     def _render_frame(self):
@@ -364,22 +350,25 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
         for item in self.zbuffer:
-            window.blit(item["image"], (item["x"], item["y"]))
+            self.window.blit(item["image"], (item["x"], item["y"]))
 
         # render gun / gun animation
         self.window.blit(gun["default"], (60, 20))
         if gun["animation"]:
             gun["animation"] = True
-            window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
+            self.window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
             gun["shot_count"] += 1
             if gun["shot_count"] >= 20:
                 gun["shot_count"] = 0
                 gun["animation"] = False
-            pygame.display.flip()
 
-        pygame.event.pump()
-        pygame.display.update()
-        self.clock.tick(self.metadata["render_fps"])
+        if self.render_mode == "human":
+            pygame.event.pump()
+            pygame.display.flip()
+            pygame.display.update()
+            self.clock.tick(self.metadata["render_fps"])
+        else:
+            return self._get_rgb()
 
     def close(self):
         if self.window is not None:

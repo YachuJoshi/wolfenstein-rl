@@ -1,47 +1,31 @@
-import pygame
-from math import sin, cos
-from src.base import MAP, MAP_SIZE, MAP_SCALE
+def get_env(level, mode):
+    if level not in ("basic", "defend", "deadly"):
+        raise ValueError("Need a valid level!")
+
+    if level == "basic":
+        from rl.env.basic import WolfensteinBasicEnv
+
+        return WolfensteinBasicEnv(render_mode=mode)
+
+    if level == "defend":
+        from rl.env.defend import WolfensteinDefendTheCenterEnv
+
+        return WolfensteinDefendTheCenterEnv(render_mode=mode)
+
+    from rl.env.deadly import WolfensteinDeadlyCorridorEnv
+
+    return WolfensteinDeadlyCorridorEnv(render_mode=mode)
 
 
-def draw_minimap(window, sprites, player_x, player_y, player_angle):
-    for row in range(MAP_SIZE):
-        for col in range(10):
-            pygame.draw.rect(
-                window,
-                (100, 100, 100) if MAP[row * 10 + col] != " " else (200, 200, 200),
-                (col * 5, row * 5, 5, 5),
-            )
-        pygame.draw.circle(
-            window,
-            (255, 0, 0),
-            (int((player_x / MAP_SCALE) * 5), int((player_y / MAP_SCALE) * 5)),
-            2,
-        )
-        pygame.draw.line(
-            window,
-            (255, 0, 0),
-            ((player_x / MAP_SCALE) * 5, (player_y / MAP_SCALE) * 5),
-            (
-                (player_x / MAP_SCALE) * 5 + sin(player_angle) * 5,
-                (player_y / MAP_SCALE) * 5 + cos(player_angle) * 5,
-            ),
-            1,
-        )
-        for sprite in sprites:
-            if sprite["type"] == "soldier" and not sprite["dead"]:
-                pygame.draw.circle(
-                    window,
-                    (0, 0, 255),
-                    (
-                        int((sprite["x"] / MAP_SCALE) * 5),
-                        int((sprite["y"] / MAP_SCALE) * 5),
-                    ),
-                    2,
-                )
+def get_dir(level):
+    if level not in ("basic", "defend", "deadly"):
+        raise ValueError("Need a valid level!")
+
+    return f"./logs/{level}", f"./models/{level}"
 
 
-def show_fps(window, clock):
-    # print FPS to screen
-    font = pygame.font.SysFont("Monospace Regular", 30)
-    fps_surface = font.render("FPS: " + str(int(clock.get_fps())), False, (255, 0, 0))
-    window.blit(fps_surface, (120, 0))
+def get_model_dir(level, steps):
+    if level not in ("basic", "defend", "deadly"):
+        raise ValueError("Need a valid level!")
+
+    return f"./models/{level}/model_{steps}"

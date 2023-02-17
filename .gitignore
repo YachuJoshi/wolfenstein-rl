@@ -4,3 +4,4 @@ models
 logs
 .DS_Store
 game.py
+new.py
