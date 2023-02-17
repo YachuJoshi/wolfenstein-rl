@@ -29,3 +29,7 @@ def get_model_dir(level, steps):
         raise ValueError("Need a valid level!")
 
     return f"./models/{level}/model_{steps}"
+
+
+def get_train_env_mode(level):
+    return "rgb_array" if level == "deadly" else None
