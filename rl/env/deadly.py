@@ -8,7 +8,7 @@ from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
-from math import sin, cos, sqrt, atan2, degrees
+from math import sin, cos, sqrt, atan2, degrees, dist
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -53,7 +53,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
     def _enemy_hit(self, enemy: Enemy) -> None:
         enemy.dead = True
         enemy.dx = 0
-        self.reward = 100
+        self.reward += 100
         self.enemy_death_count += 1
 
     def _transform_image(self, observation):
@@ -89,6 +89,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return observation
 
     def step(self, action):
+        self.reward = 0
         self.done = False
 
         offset_x = sin(INITIAL_ANGLE) * MAP_SPEED
@@ -118,11 +119,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 2 and self.player_x < 1265.0:
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-            # if MAP_DEADLY_CORRIDOR[target_y] in " e":
-            #     self.player_y += offset_y
+
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
                 self.player_x -= offset_x
+
         elif action == 4:
             if gun["animation"] == False:
                 gun["animation"] = True
@@ -314,22 +315,27 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     "distance": distance,
                 }
             )
+        player_coordinates = (self.player_x, self.player_y)
+        gem_coordinates = (GEM_POSITION["x"], GEM_POSITION["y"])
+        player_gem_distance = dist(player_coordinates, gem_coordinates)
+
+        self.reward += 4 / player_gem_distance
 
         if not self.done:
-            self.reward = -1
+            self.reward -= 1
 
         if self.player_health <= 0:
-            self.reward = -1000
+            self.reward -= 1000
             self.done = True
 
         if (self.enemy_death_count == len(self.enemies)) and (
             self.player_x >= GEM_POSITION["x"] - 20
         ):
-            self.reward = 1000
+            self.reward += 1000
             self.done = True
 
         if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
-            self.reward = -500
+            self.reward -= 500
             self.done = True
 
         observation = self._get_obs()
@@ -339,6 +345,8 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         if self.render_mode == "human":
             self._render_frame()
+
+        print(reward)
 
         return observation, reward, done, info
 
