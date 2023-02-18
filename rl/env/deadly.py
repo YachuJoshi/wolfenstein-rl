@@ -346,8 +346,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
-        print(reward)
-
         return observation, reward, done, info
 
     def _get_rgb(self):
