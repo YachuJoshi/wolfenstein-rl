@@ -1,4 +1,5 @@
 import gym
+import cv2
 import pygame
 import numpy as np
 from src.base import *
@@ -7,7 +8,7 @@ from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
-from math import sin, cos, sqrt, atan2, degrees, dist
+from math import sin, cos, sqrt, atan2, degrees
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -26,7 +27,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
         super().seed(seed)
 
-        shape = (200, 320, 3)
+        shape = (100, 160, 1)
         self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
         self.action_space = Discrete(5)
 
@@ -55,6 +56,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.reward = 100
         self.enemy_death_count += 1
 
+    def _transform_image(self, observation):
+        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
+        reshaped = np.reshape(resized, (100, 160, 1))
+        return reshaped
+
     def reset(self):
         self.reward = 0
         self.zbuffer = []
@@ -82,7 +89,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return observation
 
     def step(self, action):
-        print(action)
         self.done = False
 
         offset_x = sin(INITIAL_ANGLE) * MAP_SPEED
@@ -337,9 +343,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return observation, reward, done, info
 
     def _get_rgb(self):
-        return np.transpose(
+        observation = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         )
+        return self._transform_image(observation)
 
     def render(self):
         if self.render_mode == "rgb_array":
@@ -367,8 +374,8 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             pygame.display.flip()
             pygame.display.update()
             self.clock.tick(self.metadata["render_fps"])
-        else:
-            return self._get_rgb()
+
+        return self._get_rgb()
 
     def close(self):
         if self.window is not None:
