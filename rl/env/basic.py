@@ -1,5 +1,6 @@
 import gym
 import pygame
+import cv2
 import numpy as np
 from src.base import *
 from src.screen import window, clock
@@ -13,21 +14,20 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("BASIC")
 
 class WolfensteinBasicEnv(gym.Env):
     metadata = {
-        "render_modes": ["human"],
+        "render_modes": ["human", "rgb_array"],
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode=None, seed=42):
         super(WolfensteinBasicEnv, self).__init__()
+        super().seed(seed)
 
-        shape = (2,)
+        shape = (100, 160, 1)
         obs_low = np.ones(shape) * -np.inf
         obs_high = np.ones(shape) * np.inf
 
         # [ playerXPosition, enemyXPosition ]
-        self.observation_space = Box(
-            low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
-        )
+        self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
 
         self.action_space = Discrete(3)
 
@@ -45,11 +45,17 @@ class WolfensteinBasicEnv(gym.Env):
         self.enemy.dead = True
         self.enemy.death_count = 0
         self.enemy_dx = 0
-        self.reward += 10
+        self.reward = 100
         self.done = True
 
     def _get_obs(self):
-        return np.array([self.player_x, self.enemy.x])
+        return self._render_frame()
+
+    def _transform_image(self, observation):
+        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
+        reshaped = np.reshape(resized, (100, 160, 1))
+        return reshaped
 
     def _get_info(self):
         return {}
@@ -63,6 +69,7 @@ class WolfensteinBasicEnv(gym.Env):
         self.player_y = MAP_SCALE * 8 + 20.0
         self.player_angle = pi
         self.enemy = Enemy(id=1, x=160 if np.random.rand() > 0.5 else 300, y=360)
+
         observation = self._get_obs()
 
         if self.render_mode == "human":
@@ -114,7 +121,7 @@ class WolfensteinBasicEnv(gym.Env):
                 gun["animation"] = True
 
             if not self.enemy.dead:
-                self.reward -= 0.1
+                self.reward = -5
 
         self.player_angle %= DOUBLE_PI
         self.zbuffer = []
@@ -287,8 +294,10 @@ class WolfensteinBasicEnv(gym.Env):
             }
         )
 
-        if not self.done:
-            self.reward -= 1
+        if (
+            not self.done
+        ):  ### this thing here keeps the reward -1 in each time step except for kills and death
+            self.reward = -1
 
         observation = self._get_obs()
         reward = self.reward
@@ -300,8 +309,14 @@ class WolfensteinBasicEnv(gym.Env):
 
         return observation, reward, done, info
 
+    def _get_rgb(self):
+        observation = np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+        )
+        return self._transform_image(observation)
+
     def render(self):
-        if self.render_mode == "human":
+        if self.render_mode == "rgb_array":
             return self._render_frame()
 
     def _render_frame(self):
@@ -322,9 +337,12 @@ class WolfensteinBasicEnv(gym.Env):
                 gun["animation"] = False
             pygame.display.flip()
 
-        pygame.event.pump()
-        pygame.display.update()
-        self.clock.tick(self.metadata["render_fps"])
+        if self.render_mode == "human":
+            pygame.event.pump()
+            pygame.display.update()
+            self.clock.tick(self.metadata["render_fps"])
+
+        return self._get_rgb()
 
     def close(self):
         if self.window is not None:

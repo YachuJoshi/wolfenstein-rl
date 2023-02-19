@@ -32,4 +32,4 @@ def get_model_dir(level, steps):
 
 
 def get_train_env_mode(level):
-    return "rgb_array" if level == "deadly" else None
+    return "rgb_array" if level == "deadly" else "rgb_array"  # None
