@@ -23,9 +23,8 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None, seed=42):
+    def __init__(self, render_mode=None):
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
-        super().seed(seed)
 
         shape = (100, 160, 1)
         self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)

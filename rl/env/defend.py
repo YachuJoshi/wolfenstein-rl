@@ -1,5 +1,6 @@
 import gym
 import os
+import cv2
 import pygame
 import numpy as np
 from src.base import *
@@ -9,7 +10,7 @@ from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
-from math import sin, cos, sqrt, atan2, degrees, dist
+from math import sin, cos, sqrt, atan2, degrees
 
 FILE_PATH = "images/sprites"
 bullet = pygame.image.load(os.path.join(FILE_PATH, "bullet.png")).convert_alpha()
@@ -33,27 +34,15 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")
 
 class WolfensteinDefendTheCenterEnv(gym.Env):
     metadata = {
-        "render_modes": ["human"],
+        "render_modes": ["human", "rgb_array"],
         "render_fps": 120,
     }
 
     def __init__(self, render_mode=None):
         super(WolfensteinDefendTheCenterEnv, self).__init__()
 
-        shape = (5,)
-        obs_low = np.ones(shape) * -np.inf
-        obs_high = np.ones(shape) * np.inf
-
-        # [
-        #   enemyOnePositionDiff, enemyTwoPositionDiff,
-        #   enemyThreePositionDiff, enemyFourPositionDiff,
-        #   ammoCount
-        #  ]
-
-        self.observation_space = Box(
-            low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
-        )
-
+        shape = (100, 160, 1)
+        self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
         self.action_space = Discrete(3)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -70,16 +59,16 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.kill_count = 0
 
     def _get_obs(self):
-        obs_array = [
-            dist((self.player_x, self.player_y), (enemy.x, enemy.y))
-            for enemy in self.enemies
-        ]
-        obs_array.append(self.ammo_count)
-
-        return np.array(obs_array)
+        return self._render_frame()
 
     def _get_info(self):
-        return {}
+        return {"info": self.ammo_count}
+
+    def _transform_image(self, observation):
+        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
+        reshaped = np.reshape(resized, (100, 160, 1))
+        return reshaped
 
     def _regenerate_enemies(self, index: int) -> None:
         self.enemies = list(filter(lambda enemy: (enemy.id != index), self.enemies))
@@ -93,7 +82,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         enemy.death_count = 0
         enemy.dx = 0
         enemy.dy = 0
-        self.reward = 100
         self._regenerate_enemies(index)
 
     def reset(self):
@@ -119,6 +107,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         return observation
 
     def step(self, action):
+        self.reward = 0
         self.done = False
 
         # 0 -> Turn Left
@@ -126,10 +115,10 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         # 2 -> Attack
 
         if action == 0:
-            self.player_angle += 0.08
+            self.player_angle += 0.04
 
         elif action == 1:
-            self.player_angle -= 0.08
+            self.player_angle -= 0.04
 
         elif action == 2:
             if gun["animation"] == False and self.ammo_count > 0:
@@ -281,22 +270,18 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                     enemy.walk_index = 0
 
                 # Shoot & Enemy Dead
-                if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
-                    # enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
-                    # enemy.death_count += 1
-
+                if abs(shift_rays) < 20 and distance < 280 and gun["animation"]:
                     self._enemy_hit(enemy, index)
-                    # if enemy.death_count >= 16:
-                    #     print("DEAD", 284)
+                    self.reward += 1
 
                 if distance <= 10:
-                    self.reward = -1000
                     self.player_health -= 25
 
                     # Remove that enemy & Add that enemy to the bounday
                     self._regenerate_enemies(index)
 
                     if self.player_health <= 0:
+                        self.reward -= 1
                         self.done = True
             # Enemy Dead
             else:
@@ -336,9 +321,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 }
             )
 
-        if not self.done:
-            self.reward = 0.1
-
         observation = self._get_obs()
         reward = self.reward
         done = self.done
@@ -349,8 +331,14 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
         return observation, reward, done, info
 
+    def _get_rgb(self):
+        observation = np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+        )
+        return self._transform_image(observation)
+
     def render(self):
-        if self.render_mode == "human":
+        if self.render_mode == "rgb_array":
             return self._render_frame()
 
     def _render_frame(self):
@@ -374,22 +362,25 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
         for item in self.zbuffer:
-            window.blit(item["image"], (item["x"], item["y"]))
+            self.window.blit(item["image"], (item["x"], item["y"]))
 
         # render gun / gun animation
         self.window.blit(gun["default"], (60, 20))
         if gun["animation"]:
             gun["animation"] = True
-            window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
+            self.window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
             gun["shot_count"] += 1
             if gun["shot_count"] >= 20:
                 gun["shot_count"] = 0
                 gun["animation"] = False
-            pygame.display.flip()
 
-        pygame.event.pump()
-        pygame.display.update()
-        self.clock.tick(self.metadata["render_fps"])
+        if self.render_mode == "human":
+            pygame.event.pump()
+            pygame.display.flip()
+            pygame.display.update()
+            self.clock.tick(self.metadata["render_fps"])
+
+        return self._get_rgb()
 
     def close(self):
         if self.window is not None:

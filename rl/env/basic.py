@@ -1,4 +1,5 @@
 import gym
+import cv2
 import pygame
 import numpy as np
 from src.base import *
@@ -13,22 +14,14 @@ MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("BASIC")
 
 class WolfensteinBasicEnv(gym.Env):
     metadata = {
-        "render_modes": ["human"],
+        "render_modes": ["human", "rgb_array"],
         "render_fps": 120,
     }
 
     def __init__(self, render_mode=None):
         super(WolfensteinBasicEnv, self).__init__()
-
-        shape = (2,)
-        obs_low = np.ones(shape) * -np.inf
-        obs_high = np.ones(shape) * np.inf
-
-        # [ playerXPosition, enemyXPosition ]
-        self.observation_space = Box(
-            low=obs_low, high=obs_high, shape=(shape), dtype=np.float64
-        )
-
+        shape = (100, 160, 1)
+        self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
         self.action_space = Discrete(3)
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -45,14 +38,20 @@ class WolfensteinBasicEnv(gym.Env):
         self.enemy.dead = True
         self.enemy.death_count = 0
         self.enemy_dx = 0
-        self.reward += 10
+        self.reward += 101
         self.done = True
 
     def _get_obs(self):
-        return np.array([self.player_x, self.enemy.x])
+        return self._render_frame()
 
     def _get_info(self):
         return {}
+
+    def _transform_image(self, observation):
+        gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
+        resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
+        reshaped = np.reshape(resized, (100, 160, 1))
+        return reshaped
 
     def reset(self):
         self.enemy_dx = 1 if np.random.rand() > 0.5 else -1
@@ -71,6 +70,7 @@ class WolfensteinBasicEnv(gym.Env):
         return observation
 
     def step(self, action):
+        self.reward = 0
         self.done = False
 
         offset_x = sin(self.player_angle) * MAP_SPEED
@@ -300,8 +300,14 @@ class WolfensteinBasicEnv(gym.Env):
 
         return observation, reward, done, info
 
+    def _get_rgb(self):
+        observation = np.transpose(
+            np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
+        )
+        return self._transform_image(observation)
+
     def render(self):
-        if self.render_mode == "human":
+        if self.render_mode == "rgb_array":
             return self._render_frame()
 
     def _render_frame(self):
@@ -309,22 +315,25 @@ class WolfensteinBasicEnv(gym.Env):
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
         for item in self.zbuffer:
-            window.blit(item["image"], (item["x"], item["y"]))
+            self.window.blit(item["image"], (item["x"], item["y"]))
 
         # render gun / gun animation
         self.window.blit(gun["default"], (60, 20))
         if gun["animation"]:
             gun["animation"] = True
-            window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
+            self.window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
             gun["shot_count"] += 1
             if gun["shot_count"] >= 20:
                 gun["shot_count"] = 0
                 gun["animation"] = False
-            pygame.display.flip()
 
-        pygame.event.pump()
-        pygame.display.update()
-        self.clock.tick(self.metadata["render_fps"])
+        if self.render_mode == "human":
+            pygame.event.pump()
+            pygame.display.flip()
+            pygame.display.update()
+            self.clock.tick(self.metadata["render_fps"])
+
+        return self._get_rgb()
 
     def close(self):
         if self.window is not None:

@@ -30,6 +30,7 @@ def train(
         device=device,
         tensorboard_log=log_dir,
         learning_rate=0.0001,
+        n_steps=4096,
     )
 
     model.learn(total_timesteps=total_steps, callback=callback)
