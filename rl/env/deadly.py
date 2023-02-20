@@ -8,7 +8,7 @@ from src.enemy import Enemy
 from collections import namedtuple
 from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
-from math import sin, cos, sqrt, atan2, degrees
+from math import sin, cos, sqrt, atan2, degrees, dist
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -39,21 +39,28 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.player_x = 86.0
         self.player_y = 160.0
         self.player_angle = INITIAL_ANGLE
-        self.ammo_count = 50
         self.player_health = 100
         self.enemy_death_count = 0
         self.zbuffer = []
+
+        ## reward shaping variables
+
+        self.ammo_count = 52
+        self.ammo = self.ammo_count
+        self.damage_taken = 0
+        self.hitcount = 0
+        # number of hits to enemies , essentially enemy_death_count count
 
     def _get_obs(self):
         return self._render_frame()
 
     def _get_info(self):
-        return {}
+        return {"info": self.ammo_count}
 
     def _enemy_hit(self, enemy: Enemy) -> None:
         enemy.dead = True
         enemy.dx = 0
-        self.reward = 100
+        # self.reward = 100
         self.enemy_death_count += 1
 
     def _transform_image(self, observation):
@@ -63,6 +70,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return reshaped
 
     def reset(self):
+        # reward shaping vars
+        self.ammo = self.ammo_count
+        self.damage_taken = 0
+        self.hitcount = 0
+
         self.reward = 0
         self.zbuffer = []
         self.done = False
@@ -73,8 +85,18 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.enemy_death_count = 0
         self.player_angle = INITIAL_ANGLE
         self.enemies = [
-            Enemy(id=1, x=304.0, y=98.0, is_attacking=True),
-            Enemy(id=2, x=450.0, y=236.0, is_attacking=True),
+            Enemy(
+                id=1,
+                x=304.0,
+                y=98.0,
+                is_attacking=True,
+            ),
+            Enemy(
+                id=2,
+                x=450.0,
+                y=236.0,
+                is_attacking=True,
+            ),
             Enemy(id=3, x=680.0, y=98.0, is_attacking=True),
             Enemy(id=4, x=850.0, y=236.0, is_attacking=True),
             Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
@@ -90,6 +112,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
     def step(self, action):
         self.done = False
+        self.reward = 0
+        total_reward = 0
+        damage_taken = 0
+        hitcount = 0
+        ammo = 0
+        dx = 0
 
         offset_x = sin(INITIAL_ANGLE) * MAP_SPEED
         offset_y = cos(INITIAL_ANGLE) * MAP_SPEED
@@ -118,11 +146,13 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 2 and self.player_x < 1265.0:
             if MAP[target_x] in " e":
                 self.player_x += offset_x
+                dx = offset_x
             # if MAP_DEADLY_CORRIDOR[target_y] in " e":
             #     self.player_y += offset_y
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
                 self.player_x -= offset_x
+                dx = -offset_x
         elif action == 4:
             if gun["animation"] == False:
                 gun["animation"] = True
@@ -251,7 +281,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if enemy.is_attacking and distance < enemy.distance_threshold:
+                if enemy.is_attacking and distance < 220:  ## distance threshold
                     enemy.image = enemy.attack_animation_list[
                         int(enemy.attack_index / 8)
                     ]
@@ -261,14 +291,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                         enemy.attack_index = 0
 
                     if np.random.rand() < 0.2:
-                        self.player_health -= 0.4
+                        self.player_health -= 1.5
 
                 # Shoot & Enemy Dead
-                if (
-                    abs(shift_rays) < 20
-                    and distance < enemy.distance_threshold
-                    and gun["animation"]
-                ):
+                if abs(shift_rays) < 20 and distance < 220 and gun["animation"]:
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
                     enemy.death_count += 1
 
@@ -315,25 +341,52 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 }
             )
 
-        if not self.done:
-            self.reward = -1
+        # offset_x is the change in distance dx
+
+        self.reward += dx
+
+        # if not self.done:
+        #     self.reward = -1
 
         if self.player_health <= 0:
-            self.reward = -1000
+            self.reward -= 100
             self.done = True
 
-        if (self.enemy_death_count == len(self.enemies)) and (
+        if (
             self.player_x >= GEM_POSITION["x"] - 20
-        ):
-            self.reward = 1000
+        ):  # (self.enemy_death_count == len(self.enemies)) and (
+            # self.reward = 1000
             self.done = True
+            print("GEM gather done")
 
-        if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
-            self.reward = -500
-            self.done = True
+        # if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
+        #     #     self.reward = -500
+        #     print("done 360")
+        #     self.done = True
+
+        # reward shaping
+        hitcount = self.enemy_death_count
+        ammo = self.ammo_count
+        damage_taken = 100 - self.player_health
+
+        #    # calculate reward deltas
+        damage_taken_delta = -damage_taken + self.damage_taken  ## -new + old
+        self.damage_taken = damage_taken
+        hitcount_delta = hitcount - self.hitcount
+        self.hitcount = hitcount
+        ammo_delta = ammo - self.ammo
+        self.ammo = ammo
+
+        #     #accumulated reward
+        total_reward = (
+            self.reward
+            + damage_taken_delta * 20
+            + hitcount_delta * 200
+            + ammo_delta * 5
+        )
 
         observation = self._get_obs()
-        reward = self.reward
+        reward = total_reward  ## self.reward
         done = self.done
         info = self._get_info()
 
