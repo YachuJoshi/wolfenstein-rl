@@ -1,21 +1,22 @@
 from math import pi
+from typing import Tuple, List
 
 # screen
-WIDTH = 320
-HEIGHT = 200
+WIDTH: int = 320
+HEIGHT: int = 200
 
 # camera
-FOV = pi / 3
-HALF_FOV = FOV / 2
-STEP_ANGLE = FOV / WIDTH
+FOV: float = pi / 3
+HALF_FOV: float = FOV / 2
+STEP_ANGLE: float = FOV / WIDTH
 CENTRAL_RAY = int(WIDTH / 2) - 1
-DOUBLE_PI = 2 * pi
+DOUBLE_PI: int = 2 * pi
 
 # map
 # MAP_SIZE = 22  # -> BASIC
 # MAP_SIZE = 10  # -> DEFEND
 # MAP_SIZE = 22  # -> DEADLY CORRIDOR
-MAP_SCALE = 64
+MAP_SCALE: int = 64
 
 MAP_DEMO = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
@@ -105,7 +106,9 @@ MAP_LIST = [
 ]
 
 
-def get_map_details(map_name: str):
+def get_map_details(
+    map_name: str,
+) -> Tuple[List[str], int, float, float]:
     map = list(filter(lambda map_item: map_item["name"] == map_name, MAP_LIST))[0]
     MAP_RANGE: float = map["map_size"] * MAP_SCALE
     MAP_SPEED: float = (MAP_SCALE / 2) / 10

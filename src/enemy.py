@@ -36,12 +36,12 @@ class Enemy:
             enemy.subsurface(0, frame * 64, 64, 64) for frame in range(1, 5)
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"""
                 Enemy: {self.id} -> {self.dead}
                 """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"""
                 Enemy: {self.id} -> {self.dead}
                 """

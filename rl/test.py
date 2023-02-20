@@ -1,8 +1,9 @@
 import time
+from gym import Env
 from rl.ppo import PPO
 
 
-def test_random(env, episodes=10):
+def test_random(env: Env, episodes: int = 10) -> None:
     for episode in range(episodes):
         _obs = env.reset()
         done = False
@@ -21,7 +22,7 @@ def test_random(env, episodes=10):
     env.close()
 
 
-def test(env, model_path, episodes=10):
+def test(env: Env, model_path: str, episodes: int = 10) -> None:
     model = PPO.load(model_path)
 
     for episode in range(1, episodes + 1):

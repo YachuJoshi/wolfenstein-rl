@@ -1,9 +1,10 @@
 import torch
+from gym import Env
 from rl.ppo import PPO
 from rl.utils.callback import TrainAndLoggingCallback
 
 
-def get_device():
+def get_device() -> torch.device:
     # if torch.backends.mps.is_available():
     #     return torch.device("mps")
 
@@ -14,13 +15,13 @@ def get_device():
 
 
 def train(
-    env,
-    total_steps,
-    log_dir,
-    model_dir,
-    policy="MlpPolicy",
-    save_frequency=100000,
-):
+    env: Env,
+    total_steps: int,
+    log_dir: str,
+    model_dir: str,
+    policy: str = "MlpPolicy",
+    save_frequency: int = 100000,
+) -> None:
     device = get_device()
     callback = TrainAndLoggingCallback(check_freq=save_frequency, save_path=model_dir)
     model = PPO(

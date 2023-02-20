@@ -1,4 +1,8 @@
-def get_env(level, mode):
+from gym import Env
+from typing import Tuple
+
+
+def get_env(level: str, mode: str) -> Env:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
@@ -17,19 +21,15 @@ def get_env(level, mode):
     return WolfensteinDeadlyCorridorEnv(render_mode=mode)
 
 
-def get_dir(level):
+def get_dir(level: str) -> Tuple[str, str]:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
-    return f"./logs/{level}", f"./models/{level}"
+    return f"./logs/{level}", f"./models/{level}/cnn"
 
 
-def get_model_dir(level, steps):
+def get_model_dir(level: str, steps: int) -> str:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
-    return f"./models/{level}/model_{steps}"
-
-
-def get_train_env_mode(level):
-    return "rgb_array" if level == "deadly" else None
+    return f"./models/{level}/cnn/model_{steps}"

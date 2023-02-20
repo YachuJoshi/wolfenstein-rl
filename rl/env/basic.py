@@ -2,12 +2,18 @@ import gym
 import cv2
 import pygame
 import numpy as np
+
 from src.base import *
-from src.screen import window, clock
+from src.screen import *
 from src.enemy import Enemy
-from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
+
+from gym.spaces import Box, Discrete
+from typing import Union, Tuple, Type, Dict, Literal
 from math import sin, cos, sqrt, atan2, degrees, pi
+
+TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
 
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("BASIC")
 
@@ -18,7 +24,7 @@ class WolfensteinBasicEnv(gym.Env):
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode: RenderMode = None) -> None:
         super(WolfensteinBasicEnv, self).__init__()
         shape = (100, 160, 1)
         self.observation_space = Box(0, 255, shape=(shape), dtype=np.uint8)
@@ -41,19 +47,19 @@ class WolfensteinBasicEnv(gym.Env):
         self.reward += 101
         self.done = True
 
-    def _get_obs(self):
+    def _get_obs(self) -> np.ndarray:
         return self._render_frame()
 
-    def _get_info(self):
+    def _get_info(self) -> Dict[str, int]:
         return {}
 
-    def _transform_image(self, observation):
+    def _transform_image(self, observation: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
         resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
         reshaped = np.reshape(resized, (100, 160, 1))
         return reshaped
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         self.enemy_dx = 1 if np.random.rand() > 0.5 else -1
         self.zbuffer = []
         self.reward = 0
@@ -69,7 +75,7 @@ class WolfensteinBasicEnv(gym.Env):
 
         return observation
 
-    def step(self, action):
+    def step(self, action: int) -> TypeStep:
         self.reward = 0
         self.done = False
 
@@ -300,17 +306,17 @@ class WolfensteinBasicEnv(gym.Env):
 
         return observation, reward, done, info
 
-    def _get_rgb(self):
+    def _get_rgb(self) -> np.ndarray:
         observation = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         )
         return self._transform_image(observation)
 
-    def render(self):
+    def render(self) -> Union[np.ndarray, None]:
         if self.render_mode == "rgb_array":
             return self._render_frame()
 
-    def _render_frame(self):
+    def _render_frame(self) -> np.ndarray:
         self.window.blit(background, (0, 0))
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
@@ -335,7 +341,7 @@ class WolfensteinBasicEnv(gym.Env):
 
         return self._get_rgb()
 
-    def close(self):
+    def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()

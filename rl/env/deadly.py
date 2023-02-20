@@ -2,18 +2,26 @@ import gym
 import cv2
 import pygame
 import numpy as np
+
 from src.base import *
-from src.screen import window, clock
+from src.screen import *
 from src.enemy import Enemy
-from collections import namedtuple
-from gym.spaces import Box, Discrete
 from src.textures import background, gun, textures
+
+from collections import namedtuple
+from typing import Union, Tuple, Type, Literal, Dict
+
+from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees, dist
 
 
 Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
 GEM_POSITION = {"x": 1260.0, "y": 182.0}
+
+TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
+
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY")
 
 
@@ -23,7 +31,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode: RenderMode = None) -> None:
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
 
         shape = (100, 160, 1)
@@ -43,10 +51,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.enemy_death_count = 0
         self.zbuffer = []
 
-    def _get_obs(self):
+    def _get_obs(self) -> np.ndarray:
         return self._render_frame()
 
-    def _get_info(self):
+    def _get_info(self) -> Dict[str, int]:
         return {}
 
     def _enemy_hit(self, enemy: Enemy) -> None:
@@ -55,13 +63,13 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.reward += 100
         self.enemy_death_count += 1
 
-    def _transform_image(self, observation):
+    def _transform_image(self, observation: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
         resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
         reshaped = np.reshape(resized, (100, 160, 1))
         return reshaped
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         self.reward = 0
         self.zbuffer = []
         self.done = False
@@ -87,7 +95,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return observation
 
-    def step(self, action):
+    def step(self, action: int) -> TypeStep:
         self.reward = 0
         self.done = False
 
@@ -347,17 +355,17 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return observation, reward, done, info
 
-    def _get_rgb(self):
+    def _get_rgb(self) -> np.ndarray:
         observation = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         )
         return self._transform_image(observation)
 
-    def render(self):
+    def render(self) -> Union[np.ndarray, None]:
         if self.render_mode == "rgb_array":
             return self._render_frame()
 
-    def _render_frame(self):
+    def _render_frame(self) -> np.ndarray:
         self.window.blit(background, (0, 0))
 
         self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
@@ -382,7 +390,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return self._get_rgb()
 
-    def close(self):
+    def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()

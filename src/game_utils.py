@@ -3,7 +3,13 @@ from math import sin, cos
 from src.base import MAP, MAP_SIZE, MAP_SCALE
 
 
-def draw_minimap(window, sprites, player_x, player_y, player_angle):
+def draw_minimap(
+    window: pygame.Surface,
+    sprites,
+    player_x: float,
+    player_y: float,
+    player_angle: float,
+):
     for row in range(MAP_SIZE):
         for col in range(10):
             pygame.draw.rect(
@@ -40,7 +46,7 @@ def draw_minimap(window, sprites, player_x, player_y, player_angle):
                 )
 
 
-def show_fps(window, clock):
+def show_fps(window: pygame.Surface, clock: pygame.time.Clock):
     # print FPS to screen
     font = pygame.font.SysFont("Monospace Regular", 30)
     fps_surface = font.render("FPS: " + str(int(clock.get_fps())), False, (255, 0, 0))

@@ -3,13 +3,17 @@ import os
 import cv2
 import pygame
 import numpy as np
+
 from src.base import *
-from src.screen import window, clock
+from src.screen import *
 from src.font import font
 from src.enemy import Enemy
+from src.textures import background, gun, textures
+
+from typing import Union, Tuple, Type, Dict, Literal
+
 from collections import namedtuple
 from gym.spaces import Box, Discrete
-from src.textures import background, gun, textures
 from math import sin, cos, sqrt, atan2, degrees
 
 FILE_PATH = "images/sprites"
@@ -29,6 +33,9 @@ coordinates = [
     Point(540.0, 540.0),
 ]
 
+TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
+
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")
 
 
@@ -38,7 +45,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode: RenderMode = None) -> None:
         super(WolfensteinDefendTheCenterEnv, self).__init__()
 
         shape = (100, 160, 1)
@@ -58,13 +65,13 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.zbuffer = []
         self.kill_count = 0
 
-    def _get_obs(self):
+    def _get_obs(self) -> np.ndarray:
         return self._render_frame()
 
-    def _get_info(self):
+    def _get_info(self) -> Dict[str, int]:
         return {"info": self.ammo_count}
 
-    def _transform_image(self, observation):
+    def _transform_image(self, observation: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
         resized = cv2.resize(gray, (160, 100), interpolation=cv2.INTER_CUBIC)
         reshaped = np.reshape(resized, (100, 160, 1))
@@ -84,7 +91,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         enemy.dy = 0
         self._regenerate_enemies(index)
 
-    def reset(self):
+    def reset(self) -> np.ndarray:
         self.zbuffer = []
         self.kill_count = 0
         self.reward = 0
@@ -106,7 +113,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
         return observation
 
-    def step(self, action):
+    def step(self, action: int) -> TypeStep:
         self.reward = 0
         self.done = False
 
@@ -331,17 +338,17 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
         return observation, reward, done, info
 
-    def _get_rgb(self):
+    def _get_rgb(self) -> np.ndarray:
         observation = np.transpose(
             np.array(pygame.surfarray.pixels3d(self.window)), axes=(1, 0, 2)
         )
         return self._transform_image(observation)
 
-    def render(self):
+    def render(self) -> Union[np.ndarray, None]:
         if self.render_mode == "rgb_array":
             return self._render_frame()
 
-    def _render_frame(self):
+    def _render_frame(self) -> np.ndarray:
         self.window.blit(background, (0, 0))
         self.window.blit(head, head_rect)
         self.window.blit(heart, heart_rect)
@@ -382,7 +389,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
         return self._get_rgb()
 
-    def close(self):
+    def close(self) -> None:
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
