@@ -33,7 +33,7 @@ coordinates = [
     Point(540.0, 540.0),
 ]
 
-TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+TypeStep = Tuple[np.ndarray, float, bool, dict]
 RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
 
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEFEND")

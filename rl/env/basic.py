@@ -12,7 +12,7 @@ from gym.spaces import Box, Discrete
 from typing import Union, Tuple, Type, Dict, Literal
 from math import sin, cos, sqrt, atan2, degrees, pi
 
-TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+TypeStep = Tuple[np.ndarray, float, bool, dict]
 RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
 
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("BASIC")

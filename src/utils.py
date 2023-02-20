@@ -1,8 +1,11 @@
 from gym import Env
-from typing import Tuple
+from typing import Tuple, Literal, Dict
+
+Level = Literal["basic", "defend", "deadly"]
+Mode = Literal["train", "test"]
 
 
-def get_env(level: str, mode: str) -> Env:
+def get_env(level: Level, mode: Mode) -> Env:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
@@ -21,15 +24,28 @@ def get_env(level: str, mode: str) -> Env:
     return WolfensteinDeadlyCorridorEnv(render_mode=mode)
 
 
-def get_dir(level: str) -> Tuple[str, str]:
+def get_dir(level: Level) -> Tuple[str, str]:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
     return f"./logs/{level}", f"./models/{level}/cnn"
 
 
-def get_model_dir(level: str, steps: int) -> str:
+def get_model_dir(level: Level, steps: int) -> str:
     if level not in ("basic", "defend", "deadly"):
         raise ValueError("Need a valid level!")
 
     return f"./models/{level}/cnn/model_{steps}"
+
+
+def get_n_steps(level: Level) -> int:
+    if level not in ("basic", "defend", "deadly"):
+        raise ValueError("Need a valid level!")
+
+    labels_map: Dict[str, int] = {
+        "basic": 2048,
+        "defend": 4096,
+        "deadly": 8192,
+    }
+
+    return labels_map[level]

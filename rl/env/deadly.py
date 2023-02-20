@@ -9,20 +9,29 @@ from src.enemy import Enemy
 from src.textures import background, gun, textures
 
 from collections import namedtuple
-from typing import Union, Tuple, Type, Literal, Dict
+from typing import Union, Tuple, Literal, Dict
 
 from gym.spaces import Box, Discrete
-from math import sin, cos, sqrt, atan2, degrees, dist
+from math import sin, cos, sqrt, atan2, degrees
 
 
 Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
 GEM_POSITION = {"x": 1260.0, "y": 182.0}
 
-TypeStep = Type[Tuple[np.ndarray, float, bool, dict]]
+TypeStep = Tuple[np.ndarray, float, bool, dict]
+DifficultyMode = Literal["easy", "medium", "hard", "insane"]
 RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
 
+MODE: Dict[str, float] = {
+    "easy": 0.8,
+    "medium": 0.6,
+    "hard": 0.4,
+    "insane": 0.2,
+}
+
 MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY")
+MAX_STEPS = 4200
 
 
 class WolfensteinDeadlyCorridorEnv(gym.Env):
@@ -31,7 +40,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         "render_fps": 120,
     }
 
-    def __init__(self, render_mode: RenderMode = None) -> None:
+    def __init__(
+        self,
+        render_mode: RenderMode = None,
+        difficulty_mode: DifficultyMode = "easy",
+    ) -> None:
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
 
         shape = (100, 160, 1)
@@ -46,21 +59,29 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.player_x = 86.0
         self.player_y = 160.0
         self.player_angle = INITIAL_ANGLE
-        self.ammo_count = 50
         self.player_health = 100
-        self.enemy_death_count = 0
+        self.steps = 0
         self.zbuffer = []
+
+        # Reward Shaping
+        self.hitcount = 0
+        self.ammo_count = 50
+        self.damage_taken = 0
+        self.enemy_death_count = 0
+        self.ammo = self.ammo_count
+
+        # Curriculum Learning
+        self.threshold = MODE[difficulty_mode]
 
     def _get_obs(self) -> np.ndarray:
         return self._render_frame()
 
     def _get_info(self) -> Dict[str, int]:
-        return {}
+        return {"ammo": self.ammo_count}
 
     def _enemy_hit(self, enemy: Enemy) -> None:
         enemy.dead = True
         enemy.dx = 0
-        self.reward += 100
         self.enemy_death_count += 1
 
     def _transform_image(self, observation: np.ndarray) -> np.ndarray:
@@ -70,22 +91,26 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         return reshaped
 
     def reset(self) -> np.ndarray:
+        self.steps = 0
         self.reward = 0
         self.zbuffer = []
         self.done = False
-        self.ammo_count = 50
         self.player_x = 86.0
         self.player_y = 160.0
-        self.player_health = 100
+        self.hitcount = 0
+        self.ammo_count = 50
+        self.damage_taken = 0
         self.enemy_death_count = 0
+        self.ammo = self.ammo_count
+        self.player_health = 100
         self.player_angle = INITIAL_ANGLE
         self.enemies = [
-            Enemy(id=1, x=304.0, y=98.0, is_attacking=True),
-            Enemy(id=2, x=450.0, y=236.0, is_attacking=True),
-            Enemy(id=3, x=680.0, y=98.0, is_attacking=True),
-            Enemy(id=4, x=850.0, y=236.0, is_attacking=True),
-            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
-            Enemy(id=6, x=1250.0, y=236.0, is_attacking=True),
+            Enemy(id=1, x=304.0, y=98.0),
+            Enemy(id=2, x=450.0, y=236.0),
+            Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
+            Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
+            Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
+            Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
         ]
 
         observation = self._get_obs()
@@ -97,7 +122,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
     def step(self, action: int) -> TypeStep:
         self.reward = 0
+        self.steps += 1
+        print(self.steps)
         self.done = False
+        rewardX = 0
 
         offset_x = sin(INITIAL_ANGLE) * MAP_SPEED
         offset_y = cos(INITIAL_ANGLE) * MAP_SPEED
@@ -126,13 +154,15 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 2 and self.player_x < 1265.0:
             if MAP[target_x] in " e":
                 self.player_x += offset_x
+                rewardX = offset_x
 
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
                 self.player_x -= offset_x
+                rewardX = -offset_x
 
         elif action == 4:
-            if gun["animation"] == False:
+            if gun["animation"] == False and self.ammo_count > 0:
                 gun["animation"] = True
                 self.ammo_count -= 1
 
@@ -259,7 +289,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if enemy.is_attacking and distance < enemy.distance_threshold:
+                if distance < enemy.distance_threshold:
+                    enemy.is_attacking = True
+                else:
+                    enemy.is_attacking = False
+
+                if enemy.is_attacking:
                     enemy.image = enemy.attack_animation_list[
                         int(enemy.attack_index / 8)
                     ]
@@ -268,8 +303,8 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     if enemy.attack_index > 15:
                         enemy.attack_index = 0
 
-                    if np.random.rand() < 0.2:
-                        self.player_health -= 0.4
+                    if np.random.rand() > self.threshold:
+                        self.player_health -= 1
 
                 # Shoot & Enemy Dead
                 if (
@@ -322,31 +357,56 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     "distance": distance,
                 }
             )
-        player_coordinates = (self.player_x, self.player_y)
-        gem_coordinates = (GEM_POSITION["x"], GEM_POSITION["y"])
-        player_gem_distance = dist(player_coordinates, gem_coordinates)
 
-        self.reward += 4 / player_gem_distance
+        # player_coordinates = (self.player_x, self.player_y)
+        # gem_coordinates = (GEM_POSITION["x"], GEM_POSITION["y"])
+        # player_gem_distance = dist(player_coordinates, gem_coordinates)
+        # self.reward += 4 / player_gem_distance
 
-        if not self.done:
-            self.reward -= 1
+        self.reward += rewardX
 
         if self.player_health <= 0:
-            self.reward -= 1000
+            self.reward -= 100
             self.done = True
 
-        if (self.enemy_death_count == len(self.enemies)) and (
-            self.player_x >= GEM_POSITION["x"] - 20
-        ):
-            self.reward += 1000
+        # if (self.enemy_death_count == len(self.enemies)) and (
+        # ):
+        if self.player_x >= GEM_POSITION["x"] - 20:
             self.done = True
+            # self.reward += 1000
 
-        if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
-            self.reward -= 500
+        # if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
+        #     self.reward -= 500
+        #     self.done = True
+
+        current_ammo_count = self.ammo_count
+        current_damage_taken = 100 - self.player_health
+        current_enemy_death_count = self.enemy_death_count
+
+        # Difference -> current - previous
+        damage_difference = abs(
+            current_damage_taken - self.damage_taken
+        )  # Negative Reinforcement
+        self.damage_taken = current_damage_taken
+
+        enemy_count_difference = abs(
+            current_enemy_death_count - self.hitcount
+        )  # Positive Reinforcement
+        self.hitcount = current_enemy_death_count
+
+        ammo_difference = abs(current_ammo_count - self.ammo)  # Negative Reinforcement
+        self.ammo = current_ammo_count
+
+        if self.steps > MAX_STEPS:
             self.done = True
 
         observation = self._get_obs()
-        reward = self.reward
+        reward = (
+            self.reward
+            + damage_difference * -20
+            + enemy_count_difference * 200
+            + ammo_difference * -5
+        )
         done = self.done
         info = self._get_info()
 
