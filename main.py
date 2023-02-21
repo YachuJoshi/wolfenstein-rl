@@ -37,34 +37,50 @@ if __name__ == "__main__":
                 raise ValueError("Unknown mode")
 
         else:
-            if args.train and args.curr:
-                prev_skill_level = deadly_modes[str(args.skill - 1)]
-                current_skill_level = deadly_modes[str(args.skill)]
-                prev_model_path = get_deadly_model_path(prev_skill_level)
-                new_log_dir, new_model_save_path = get_deadly_model_dir(
-                    curr_mode=current_skill_level
-                )
-                prev_env = get_env(
-                    level=args.level,
-                    mode=None,
-                    skill=prev_skill_level,
-                )
-                new_env = get_env(
-                    level=args.level,
-                    mode=render_mode,
-                    skill=current_skill_level,
-                )
-                curr_learn(
-                    env=prev_env,
-                    new_env=new_env,
-                    n_steps=n_steps,
-                    policy="CnnPolicy",
-                    total_steps=2000000,
-                    log_dir=new_log_dir,
-                    model_save_path=new_model_save_path,
-                    prev_model_load_path=prev_model_path,
-                    **config
-                )
+            if args.train:
+                skill_level = deadly_modes[str(args.skill)]
+
+                if args.curr:
+                    prev_skill_level = deadly_modes[str(args.skill - 1)]
+                    prev_model_path = get_deadly_model_path(prev_skill_level)
+                    new_log_dir, new_model_save_path = get_deadly_model_dir(
+                        curr_mode=skill_level
+                    )
+                    prev_env = get_env(
+                        level=args.level,
+                        mode=None,
+                        skill=prev_skill_level,
+                    )
+                    new_env = get_env(
+                        level=args.level,
+                        mode=render_mode,
+                        skill=skill_level,
+                    )
+                    curr_learn(
+                        env=prev_env,
+                        new_env=new_env,
+                        n_steps=n_steps,
+                        policy="CnnPolicy",
+                        total_steps=2000000,
+                        log_dir=new_log_dir,
+                        model_save_path=new_model_save_path,
+                        prev_model_load_path=prev_model_path,
+                        **config
+                    )
+                else:
+                    env = get_env(level=args.level, mode=render_mode, skill=skill_level)
+                    log_dir, model_save_dir = get_deadly_model_dir(
+                        curr_mode=skill_level
+                    )
+                    train(
+                        env=env,
+                        n_steps=n_steps,
+                        policy="CnnPolicy",
+                        total_steps=2000000,
+                        log_dir=log_dir,
+                        model_dir=model_save_dir,
+                        **config
+                    )
             else:
                 enemy_skill = deadly_modes[str(args.skill)]
                 env = get_env(level=args.level, mode=render_mode, skill=enemy_skill)
