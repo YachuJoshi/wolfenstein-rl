@@ -17,6 +17,18 @@ parser.add_argument(
 )
 mode = parser.add_mutually_exclusive_group()
 mode.add_argument("--train", action="store_true", help="Initiate Training Mode")
+parser.add_argument(
+    "--curr",
+    action="store_true",
+    help="Initiate Curriculum Learning Mode",
+    required="--train" in sys.argv,
+)
+parser.add_argument(
+    "--skill",
+    type=int,
+    help="Specify Enemy Skill Level",
+    required="--curr" in sys.argv,
+)
 mode.add_argument("--test", action="store_true", help="Initiate Testing Mode")
 parser.add_argument(
     "--steps",
