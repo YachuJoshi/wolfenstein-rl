@@ -123,7 +123,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
     def step(self, action: int) -> TypeStep:
         self.reward = 0
         self.steps += 1
-        print(self.steps)
         self.done = False
         rewardX = 0
 
@@ -303,8 +302,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     if enemy.attack_index > 15:
                         enemy.attack_index = 0
 
+                    # Getting Hit Probability
                     if np.random.rand() > self.threshold:
                         self.player_health -= 1
+                        print(self.player_health)
 
                 # Shoot & Enemy Dead
                 if (

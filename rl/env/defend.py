@@ -10,7 +10,7 @@ from src.font import font
 from src.enemy import Enemy
 from src.textures import background, gun, textures
 
-from typing import Union, Tuple, Type, Dict, Literal
+from typing import Union, Tuple, Dict, Literal
 
 from collections import namedtuple
 from gym.spaces import Box, Discrete
