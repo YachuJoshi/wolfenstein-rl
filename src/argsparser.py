@@ -23,13 +23,13 @@ parser.add_argument(
     help="Initiate Curriculum Learning Mode",
     required="--train" in sys.argv,
 )
+mode.add_argument("--test", action="store_true", help="Initiate Testing Mode")
 parser.add_argument(
     "--skill",
     type=int,
     help="Specify Enemy Skill Level",
-    required="--curr" in sys.argv,
+    required="--curr" in sys.argv or ("--level" == "deadly" and "--test" in sys.argv),
 )
-mode.add_argument("--test", action="store_true", help="Initiate Testing Mode")
 parser.add_argument(
     "--steps",
     type=int,
