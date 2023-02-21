@@ -9,7 +9,7 @@ from src.enemy import Enemy
 from src.textures import background, gun, textures
 
 from collections import namedtuple
-from typing import Union, Tuple, Literal, Dict
+from typing import Union, Tuple, Literal, Dict, Optional
 
 from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees
@@ -71,6 +71,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.ammo = self.ammo_count
 
         # Curriculum Learning
+        self.mode = difficulty_mode
         self.threshold = MODE[difficulty_mode]
 
     def _get_obs(self) -> np.ndarray:
@@ -305,7 +306,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     # Getting Hit Probability
                     if np.random.rand() > self.threshold:
                         self.player_health -= 1
-                        print(self.player_health)
 
                 # Shoot & Enemy Dead
                 if (
@@ -455,3 +455,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
+
+    def __str__(self) -> str:
+        return f"WolfensteinDeadlyCorridorEnv: Difficulty: {self.mode}"
+
+    def __repr__(self) -> str:
+        return f"WolfensteinDeadlyCorridorEnv: Difficulty: {self.mode}"
