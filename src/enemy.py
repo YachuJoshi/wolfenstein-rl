@@ -23,6 +23,8 @@ class Enemy:
         self.death_count = 0
         self.attack_index = 0
         self.walk_index = 0
+        self.left_index = 0
+        self.right_index = 0
         self.is_attacking = is_attacking
         self.distance_threshold = distance_threshold
         self.image = enemy.subsurface(0, 0, 64, 64)
@@ -34,6 +36,12 @@ class Enemy:
         ]
         self.diagonal_walking_animation_list = [
             enemy.subsurface(0, frame * 64, 64, 64) for frame in range(1, 5)
+        ]
+        self.left_walking_animation_list = [
+            enemy.subsurface(128, frame * 64, 64, 64) for frame in range(1, 5)
+        ]
+        self.right_walking_animation_list = [
+            enemy.subsurface(384, frame * 64, 64, 64) for frame in range(1, 5)
         ]
 
     def __str__(self) -> str:

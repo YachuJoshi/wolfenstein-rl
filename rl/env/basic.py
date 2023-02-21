@@ -9,7 +9,8 @@ from src.enemy import Enemy
 from src.textures import background, gun, textures
 
 from gym.spaces import Box, Discrete
-from typing import Union, Tuple, Type, Dict, Literal
+
+from typing import Union, Tuple, Dict, Literal
 from math import sin, cos, sqrt, atan2, degrees, pi
 
 TypeStep = Tuple[np.ndarray, float, bool, dict]
@@ -37,7 +38,8 @@ class WolfensteinBasicEnv(gym.Env):
         self.player_x = MAP_SCALE * 3 + 20.0
         self.player_y = MAP_SCALE * 8 + 20.0
         self.player_angle = pi
-        self.enemy_dx = 1
+        self.enemy = Enemy(id=1, x=np.random.randint(160, 300), y=360)
+        self.enemy_dx = 2
         self.zbuffer = []
 
     def _enemy_hit(self) -> None:
@@ -61,13 +63,14 @@ class WolfensteinBasicEnv(gym.Env):
 
     def reset(self) -> np.ndarray:
         self.enemy_dx = 1 if np.random.rand() > 0.5 else -1
+        self.enemy_direction = 0 if self.enemy_dx < 0 else 1
         self.zbuffer = []
         self.reward = 0
         self.done = False
         self.player_x = MAP_SCALE * 3 + 20.0
         self.player_y = MAP_SCALE * 8 + 20.0
         self.player_angle = pi
-        self.enemy = Enemy(id=1, x=160 if np.random.rand() > 0.5 else 300, y=360)
+        self.enemy = Enemy(id=1, x=np.random.randint(160, 300), y=360)
         observation = self._get_obs()
 
         if self.render_mode == "human":
@@ -244,12 +247,31 @@ class WolfensteinBasicEnv(gym.Env):
         )
 
         if not self.enemy.dead:
-            if self.enemy.x > 360 or self.enemy.x < 82:
+
+            if self.enemy.x < 82 or self.enemy.x > 360:
                 self.enemy_dx *= -1
+                self.enemy_direction = not self.enemy_direction
+
+            if self.enemy_direction == 0:
+                self.enemy.image = self.enemy.left_walking_animation_list[
+                    int(self.enemy.left_index / 8)
+                ]
+                self.enemy.left_index += 1
+
+                if int(self.enemy.left_index / 8) == 3:
+                    self.enemy.left_index = 0
+            else:
+                self.enemy.image = self.enemy.right_walking_animation_list[
+                    int(self.enemy.right_index / 8)
+                ]
+                self.enemy.right_index += 1
+
+                if int(self.enemy.right_index / 8) == 3:
+                    self.enemy.right_index = 0
 
             self.enemy.x += self.enemy_dx
 
-            if abs(shift_rays) < 20 and distance < 500 and gun["animation"]:
+            if abs(shift_rays) < 36 and gun["animation"]:
                 self.enemy.image = self.enemy.death_animation_list[
                     int(self.enemy.death_count / 8)
                 ]
