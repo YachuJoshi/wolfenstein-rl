@@ -3,5 +3,5 @@ __pycache__
 models
 logs
 .DS_Store
+**/.DS_Store
 game.py
-new.py

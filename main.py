@@ -46,26 +46,16 @@ if __name__ == "__main__":
                     new_log_dir, new_model_save_path = get_deadly_model_dir(
                         curr_mode=skill_level
                     )
-                    prev_env = get_env(
-                        level=args.level,
-                        mode=None,
-                        skill=prev_skill_level,
-                    )
                     new_env = get_env(
                         level=args.level,
                         mode=render_mode,
                         skill=skill_level,
                     )
                     curr_learn(
-                        env=prev_env,
                         new_env=new_env,
-                        n_steps=n_steps,
-                        policy="CnnPolicy",
                         total_steps=2000000,
-                        log_dir=new_log_dir,
                         model_save_path=new_model_save_path,
                         prev_model_load_path=prev_model_path,
-                        **config
                     )
                 else:
                     env = get_env(level=args.level, mode=render_mode, skill=skill_level)
