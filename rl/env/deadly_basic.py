@@ -30,7 +30,7 @@ MODE: Dict[str, float] = {
     "insane": 0.2,
 }
 
-MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY")
+MAP, MAP_SIZE, MAP_RANGE, MAP_SPEED = get_map_details("DEADLY_BASIC")
 MAX_STEPS = 4200
 
 
@@ -43,7 +43,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
     def __init__(
         self,
         render_mode: RenderMode = None,
-        difficulty_mode: DifficultyMode = "easy",
+        difficulty_mode: DifficultyMode = "medium",
     ) -> None:
         super(WolfensteinDeadlyCorridorEnv, self).__init__()
 
@@ -109,10 +109,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.enemies = [
             Enemy(id=1, x=304.0, y=98.0),
             Enemy(id=2, x=450.0, y=236.0),
-            Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
-            Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
-            Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
-            Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
+            # Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
+            # Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
+            # Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
+            # Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
         ]
 
         observation = self._get_obs()
@@ -152,7 +152,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 1:
             self.player_angle -= 0.04
 
-        elif action == 2 and self.player_x < 1265.0:
+        elif action == 2 and self.player_x < 442.0:
             if MAP[target_x] in " e":
                 self.player_x += offset_x
                 rewardX = offset_x
@@ -367,15 +367,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         self.reward += rewardX
 
-        if self.player_health <= 0:
-            self.reward -= 100
-            self.done = True
-
         # if (self.enemy_death_count == len(self.enemies)) and (
         # ):
-        if self.player_x >= GEM_POSITION["x"] - 20:
-            self.done = True
-            # self.reward += 1000
+        # if self.player_x >= GEM_POSITION["x"] - 20:
+        #     self.done = True
+        # self.reward += 1000
 
         # if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
         #     self.reward -= 500
@@ -399,7 +395,14 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         ammo_difference = abs(current_ammo_count - self.ammo)  # Negative Reinforcement
         self.ammo = current_ammo_count
 
+        if self.player_health <= 0:
+            self.reward -= 100
+            self.done = True
+
         if self.steps > MAX_STEPS:
+            self.done = True
+
+        if self.enemy_death_count == len(self.enemies):
             self.done = True
 
         observation = self._get_obs()
