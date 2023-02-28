@@ -82,6 +82,8 @@ MAP_DEADLY_CORRIDOR = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
 )
 
+MAP_DEADLY_CORRIDOR_BASIC = list("SSSSSSSS" "S       " "S       " "S       " "SSSSSSSS")
+
 MAP_LIST = [
     {
         "name": "DEMO",
@@ -102,6 +104,11 @@ MAP_LIST = [
         "name": "DEADLY",
         "map": MAP_DEADLY_CORRIDOR,
         "map_size": 22,
+    },
+    {
+        "name": "DEADLY_BASIC",
+        "map": MAP_DEADLY_CORRIDOR_BASIC,
+        "map_size": 8,
     },
 ]
 

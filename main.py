@@ -3,6 +3,7 @@ import sys
 from rl.config import *
 from rl.test import test, test
 from rl.train import train, curr_learn
+from rl.env.deadly_basic import WolfensteinDeadlyCorridorEnv
 
 from src.utils import *
 from src.argsparser import args
@@ -58,10 +59,14 @@ if __name__ == "__main__":
                         prev_model_load_path=prev_model_path,
                     )
                 else:
-                    env = get_env(level=args.level, mode=render_mode, skill=skill_level)
-                    log_dir, model_save_dir = get_deadly_model_dir(
-                        curr_mode=skill_level
+                    # env = get_env(level=args.level, mode=render_mode, skill=skill_level)
+                    # log_dir, model_save_dir = get_deadly_model_dir(
+                    #     curr_mode=skill_level
+                    # )
+                    env = WolfensteinDeadlyCorridorEnv(
+                        render_mode=None, difficulty_mode="medium"
                     )
+                    log_dir, model_save_dir = get_dir(level=args.level)
                     train(
                         env=env,
                         n_steps=n_steps,
@@ -73,6 +78,10 @@ if __name__ == "__main__":
                     )
             else:
                 enemy_skill = deadly_modes[str(args.skill)]
-                env = get_env(level=args.level, mode=render_mode, skill=enemy_skill)
-                model_load_path = get_deadly_model_path(enemy_skill, steps=args.steps)
+                # env = get_env(level=args.level, mode=render_mode, skill=enemy_skill)
+                # model_load_path = get_deadly_model_path(enemy_skill, steps=args.steps)
+                env = WolfensteinDeadlyCorridorEnv(
+                    render_mode="human", difficulty_mode="medium"
+                )
+                model_load_path = get_model_dir(level=args.level, steps=args.steps)
                 test(env=env, model_path=model_load_path)
