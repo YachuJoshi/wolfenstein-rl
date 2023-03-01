@@ -290,7 +290,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                     enemy.walk_index = 0
 
                 # Shoot & Enemy Dead
-                if abs(shift_rays) < 20 and distance < 280 and gun["animation"]:
+                if abs(shift_rays) < 20 and distance < 300 and gun["animation"]:
                     # enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
                     # enemy.death_count += 1
 

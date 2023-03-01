@@ -45,4 +45,7 @@ def train(
         gae_lambda=0.9,
     )  #### this one is for deadly corridor level
 
+    # model.load(
+    #     "D:\Volume D internal\study material\sem 8\wolfenstein CNN\wolfenstein-rl\models\deadly\\model_500000.zip"
+    # )
     model.learn(total_timesteps=total_steps, callback=callback)

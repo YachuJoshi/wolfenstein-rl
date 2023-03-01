@@ -85,22 +85,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.enemy_death_count = 0
         self.player_angle = INITIAL_ANGLE
         self.enemies = [
-            Enemy(
-                id=1,
-                x=304.0,
-                y=98.0,
-                is_attacking=True,
-            ),
-            Enemy(
-                id=2,
-                x=450.0,
-                y=236.0,
-                is_attacking=True,
-            ),
-            Enemy(id=3, x=680.0, y=98.0, is_attacking=True),
-            Enemy(id=4, x=850.0, y=236.0, is_attacking=True),
-            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
-            Enemy(id=6, x=1250.0, y=236.0, is_attacking=True),
+            Enemy(id=1, x=384.0, y=98.0, is_attacking=True, distance_threshold=300),
+            Enemy(id=2, x=384.0, y=236.0, is_attacking=True, distance_threshold=300),
+            Enemy(id=3, x=740.0, y=98.0, is_attacking=True, distance_threshold=300),
+            Enemy(id=4, x=740.0, y=236.0, is_attacking=True, distance_threshold=300),
+            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True, distance_threshold=300),
+            Enemy(id=6, x=1200.0, y=236.0, is_attacking=True, distance_threshold=300),
         ]
 
         observation = self._get_obs()
@@ -138,21 +128,41 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         # 4 -> Attack
 
         if action == 0:
-            self.player_angle += 0.04
+            self.player_angle += 0.05
 
         elif action == 1:
-            self.player_angle -= 0.04
+            self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
+            movement = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-                dx = offset_x
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                movement = False
+            if (
+                not (self.enemies[2].dead and self.enemies[3].dead)
+                and self.player_x > 460
+            ):
+                self.player_x = 460
+                movement = False
+            if (
+                not (self.enemies[4].dead and self.enemies[5].dead)
+                and self.player_x > 910
+            ):
+                self.player_x = 910
+                movement = False
+            dx = offset_x if movement else 0
+
             # if MAP_DEADLY_CORRIDOR[target_y] in " e":
             #     self.player_y += offset_y
-        elif action == 3 and self.player_x > 86.0:
-            if MAP[target_x] in " e":
-                self.player_x -= offset_x
-                dx = -offset_x
+        # elif action == 3 and self.player_x > 86.0:
+        #     if MAP[target_x] in " e":
+        #         self.player_x -= offset_x
+        #         dx = -offset_x
         elif action == 4:
             if gun["animation"] == False:
                 gun["animation"] = True
@@ -281,7 +291,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if enemy.is_attacking and distance < 220:  ## distance threshold
+                if enemy.is_attacking and distance_x < enemy.distance_threshold:
                     enemy.image = enemy.attack_animation_list[
                         int(enemy.attack_index / 8)
                     ]
@@ -290,11 +300,15 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     if enemy.attack_index > 15:
                         enemy.attack_index = 0
 
-                    if np.random.rand() < 0.2:
-                        self.player_health -= 1.5
+                    if np.random.rand() < 1:
+                        self.player_health -= 0.1
 
                 # Shoot & Enemy Dead
-                if abs(shift_rays) < 20 and distance < 220 and gun["animation"]:
+                if (
+                    abs(shift_rays) < 20
+                    and distance_x < enemy.distance_threshold
+                    and gun["animation"]
+                ):
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
                     enemy.death_count += 1
 
@@ -309,11 +323,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     self._enemy_hit(enemy)
 
             # Shoot & Enemy Dead
-            if gun["shot_count"] > 16 and enemy.image in [
+            if gun["shot_count"] > 3 and enemy.image in [
                 enemy.death_animation_list[0],
                 enemy.death_animation_list[1],
                 enemy.death_animation_list[2],
-            ]:
+            ]:  ## shot count>'smal value' for instant deat
                 try:
                     enemy.image = enemy.death_animation_list[
                         int(enemy.death_count / 8) + 2
@@ -327,10 +341,14 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 if enemy.death_count >= 32:
                     enemy.dead = True
                     enemy.death_count = 0
+                    print("344")
 
             sprite_image = pygame.transform.scale(
                 enemy.image, (int(sprite_height), int(sprite_height))
             )
+
+            # if enemy.image == enemy.death_animation_list[-1]:
+            #     sprite_image = pygame.transform.scale(enemy.image, (0, 0))
 
             self.zbuffer.append(
                 {
@@ -381,7 +399,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         total_reward = (
             self.reward
             + damage_taken_delta * 20
-            + hitcount_delta * 200
+            + hitcount_delta * 100
             + ammo_delta * 5
         )
 
