@@ -302,6 +302,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
                     if np.random.rand() < 1:
                         self.player_health -= 0.1
+                        print(self.player_health)
 
                 # Shoot & Enemy Dead
                 if (
