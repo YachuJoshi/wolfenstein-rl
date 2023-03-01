@@ -9,7 +9,7 @@ class Enemy:
         y: float,
         static: bool = True,
         is_attacking: bool = False,
-        distance_threshold: int = 400,
+        distance_threshold: int = 300,
     ):
         self.id = id
         self.x = x

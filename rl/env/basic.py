@@ -284,7 +284,7 @@ class WolfensteinBasicEnv(gym.Env):
             self.enemy.image = self.enemy.death_animation_list[-1]
             self._enemy_hit()
 
-        if gun["shot_count"] > 16 and self.enemy.image in [
+        if gun["shot_count"] > 4 and self.enemy.image in [
             self.enemy.death_animation_list[0],
             self.enemy.death_animation_list[1],
             self.enemy.death_animation_list[2],

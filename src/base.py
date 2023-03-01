@@ -76,9 +76,9 @@ MAP_DEFEND = list(
 
 MAP_DEADLY_CORRIDOR = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
-    "S      SS      SS    S"
+    "S      S      S      S"
     "S                    S"
-    "S         SS     S   S"
+    "S      S      S      S"
     "SSSSSSSSSSSSSSSSSSSSSS"
 )
 

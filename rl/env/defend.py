@@ -1,6 +1,6 @@
-import gym
 import os
 import cv2
+import gym
 import pygame
 import numpy as np
 
@@ -296,7 +296,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 enemy.image = enemy.death_animation_list[-1]
 
             # Shoot & Enemy Dead
-            if gun["shot_count"] > 16 and enemy.image in [
+            if gun["shot_count"] > 4 and enemy.image in [
                 enemy.death_animation_list[0],
                 enemy.death_animation_list[1],
                 enemy.death_animation_list[2],
@@ -350,6 +350,21 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
 
     def _render_frame(self) -> np.ndarray:
         self.window.blit(background, (0, 0))
+
+        self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
+        for item in self.zbuffer:
+            self.window.blit(item["image"], (item["x"], item["y"]))
+
+        # render gun / gun animation
+        self.window.blit(gun["default"], (60, 20))
+        if gun["animation"]:
+            gun["animation"] = True
+            self.window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
+            gun["shot_count"] += 1
+            if gun["shot_count"] >= 20:
+                gun["shot_count"] = 0
+                gun["animation"] = False
+
         self.window.blit(head, head_rect)
         self.window.blit(heart, heart_rect)
         self.window.blit(bullet, bullet_rect)
@@ -366,20 +381,6 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.window.blit(health, health_bounding_rect)
         self.window.blit(ammo_text, ammo_bounding_rect)
         self.window.blit(kills_text, kills_bounding_rect)
-
-        self.zbuffer = sorted(self.zbuffer, key=lambda k: k["distance"], reverse=True)
-        for item in self.zbuffer:
-            self.window.blit(item["image"], (item["x"], item["y"]))
-
-        # render gun / gun animation
-        self.window.blit(gun["default"], (60, 20))
-        if gun["animation"]:
-            gun["animation"] = True
-            self.window.blit(gun["shot"][int(gun["shot_count"] / 5)], (60, 20))
-            gun["shot_count"] += 1
-            if gun["shot_count"] >= 20:
-                gun["shot_count"] = 0
-                gun["animation"] = False
 
         if self.render_mode == "human":
             pygame.event.pump()

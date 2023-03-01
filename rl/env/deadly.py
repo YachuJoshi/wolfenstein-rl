@@ -1,18 +1,28 @@
-import gym
+import os
 import cv2
+import gym
 import pygame
 import numpy as np
 
 from src.base import *
 from src.screen import *
+from src.font import font
 from src.enemy import Enemy
 from src.textures import background, gun, textures
 
 from collections import namedtuple
-from typing import Union, Tuple, Literal, Dict, Optional
+from typing import Union, Tuple, Literal, Dict
 
 from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees
+
+FILE_PATH = "images/sprites"
+bullet = pygame.image.load(os.path.join(FILE_PATH, "bullet.png")).convert_alpha()
+heart = pygame.image.load(os.path.join(FILE_PATH, "heart.png")).convert_alpha()
+head = pygame.image.load(os.path.join(FILE_PATH, "head.png")).convert_alpha()
+bullet_rect = bullet.get_rect(topright=(WIDTH - 50, 10))
+heart_rect = heart.get_rect(topleft=(10, 10))
+head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -105,13 +115,21 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.ammo = self.ammo_count
         self.player_health = 100
         self.player_angle = INITIAL_ANGLE
+        # self.enemies = [
+        #     Enemy(id=1, x=304.0, y=98.0),
+        #     Enemy(id=2, x=450.0, y=236.0),
+        #     Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
+        #     Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
+        #     Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
+        #     Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
+        # ]
         self.enemies = [
-            Enemy(id=1, x=304.0, y=98.0),
-            Enemy(id=2, x=450.0, y=236.0),
-            Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
-            Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
-            Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
-            Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
+            Enemy(id=1, x=384.0, y=98.0, is_attacking=True),
+            Enemy(id=2, x=384.0, y=236.0, is_attacking=True),
+            Enemy(id=3, x=740.0, y=98.0, is_attacking=True),
+            Enemy(id=4, x=740.0, y=236.0, is_attacking=True),
+            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
+            Enemy(id=6, x=1200.0, y=236.0, is_attacking=True),
         ]
 
         observation = self._get_obs()
@@ -146,15 +164,36 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         # 4 -> Attack
 
         if action == 0:
-            self.player_angle += 0.04
+            self.player_angle += 0.05
 
         elif action == 1:
-            self.player_angle -= 0.04
+            self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
+            is_moving = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-                rewardX = offset_x
+
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                is_moving = False
+            if (
+                not (self.enemies[2].dead and self.enemies[3].dead)
+                and self.player_x > 460
+            ):
+                self.player_x = 460
+                is_moving = False
+            if (
+                not (self.enemies[4].dead and self.enemies[5].dead)
+                and self.player_x > 910
+            ):
+                self.player_x = 910
+                is_moving = False
+
+            rewardX = offset_x if is_moving else 0
 
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
@@ -289,7 +328,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if distance < enemy.distance_threshold:
+                if distance_x < enemy.distance_threshold + 50:
                     enemy.is_attacking = True
                 else:
                     enemy.is_attacking = False
@@ -310,7 +349,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 # Shoot & Enemy Dead
                 if (
                     abs(shift_rays) < 20
-                    and distance < enemy.distance_threshold
+                    and distance_x < enemy.distance_threshold
                     and gun["animation"]
                 ):
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
@@ -327,7 +366,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                     self._enemy_hit(enemy)
 
             # Shoot & Enemy Dead
-            if gun["shot_count"] > 16 and enemy.image in [
+            if gun["shot_count"] > 4 and enemy.image in [
                 enemy.death_animation_list[0],
                 enemy.death_animation_list[1],
                 enemy.death_animation_list[2],
@@ -405,7 +444,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         reward = (
             self.reward
             + damage_difference * -20
-            + enemy_count_difference * 200
+            + enemy_count_difference * 100
             + ammo_difference * -5
         )
         done = self.done
@@ -442,6 +481,23 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             if gun["shot_count"] >= 20:
                 gun["shot_count"] = 0
                 gun["animation"] = False
+
+        self.window.blit(head, head_rect)
+        self.window.blit(heart, heart_rect)
+        self.window.blit(bullet, bullet_rect)
+
+        health = font.render(f": {self.player_health}", False, "white")
+        health_bounding_rect = health.get_rect(topleft=(40, 10))
+
+        ammo_text = font.render(f": {self.ammo_count}", False, "white")
+        ammo_bounding_rect = ammo_text.get_rect(topright=(WIDTH - 10, 10))
+
+        kills_text = font.render(f": {int(self.enemy_death_count)}", False, "white")
+        kills_bounding_rect = kills_text.get_rect(midtop=(WIDTH / 2 + 14, 10))
+
+        self.window.blit(health, health_bounding_rect)
+        self.window.blit(ammo_text, ammo_bounding_rect)
+        self.window.blit(kills_text, kills_bounding_rect)
 
         if self.render_mode == "human":
             pygame.event.pump()
