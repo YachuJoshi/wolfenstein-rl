@@ -9,6 +9,9 @@ textures = {
 }
 
 # sprites
+flag = pygame.transform.scale(
+    pygame.image.load("./images/sprites/flag.png").convert_alpha(), (128, 128)
+)
 enemy = pygame.image.load("./images/sprites/enemy.png").convert_alpha()
 running_enemy = pygame.image.load("./images/sprites/running.png").convert_alpha()
 

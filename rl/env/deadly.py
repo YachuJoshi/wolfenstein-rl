@@ -8,6 +8,7 @@ from src.base import *
 from src.screen import *
 from src.font import font
 from src.enemy import Enemy
+from src.textures import flag
 from src.textures import background, gun, textures
 
 from collections import namedtuple
@@ -27,7 +28,13 @@ head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
-GEM_POSITION = {"x": 1260.0, "y": 182.0}
+FLAG = {
+    "x": 1280.0,
+    "y": 160.0,
+    "shift": 0.4,
+    "scale": 1.0,
+    "image": flag,
+}
 
 TypeStep = Tuple[np.ndarray, float, bool, dict]
 DifficultyMode = Literal["easy", "medium", "hard", "insane"]
@@ -398,6 +405,39 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 }
             )
 
+        flag_x = FLAG["x"] - self.player_x
+        flag_y = FLAG["y"] - self.player_y
+
+        sprite_distance = sqrt(flag_x * flag_x + flag_y * flag_y)
+        sprite2player_angle = atan2(flag_x, flag_y)
+        player2sprite_angle = sprite2player_angle - self.player_angle
+
+        if flag_x < 0:
+            player2sprite_angle += DOUBLE_PI
+        if flag_x > 0 and degrees(player2sprite_angle) <= -180:
+            player2sprite_angle += DOUBLE_PI
+        if flag_x < 0 and degrees(player2sprite_angle) >= 180:
+            player2sprite_angle -= DOUBLE_PI
+
+        shift_rays = player2sprite_angle / STEP_ANGLE
+        sprite_ray = CENTRAL_RAY - shift_rays
+
+        sprite_height = min(
+            FLAG["scale"] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
+        )
+        sprite_image = pygame.transform.scale(
+            FLAG["image"], (int(sprite_height), int(sprite_height))
+        )
+
+        self.zbuffer.append(
+            {
+                "image": sprite_image,
+                "x": sprite_ray - int(sprite_height / 2),
+                "y": 100 - sprite_height * FLAG["shift"],
+                "distance": sprite_distance,
+            }
+        )
+
         self.reward += rewardX
 
         if self.player_health <= 0:
@@ -405,7 +445,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.reward -= 100
             self.done = True
 
-        if self.player_x >= GEM_POSITION["x"] - 20:
+        if self.player_x >= FLAG["x"] - 50:
             self.done = True
 
         current_ammo_count = self.ammo_count
