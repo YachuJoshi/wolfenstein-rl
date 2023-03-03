@@ -124,12 +124,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         #     Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
         # ]
         self.enemies = [
-            Enemy(id=1, x=384.0, y=98.0, is_attacking=True),
-            Enemy(id=2, x=384.0, y=236.0, is_attacking=True),
-            Enemy(id=3, x=740.0, y=98.0, is_attacking=True),
-            Enemy(id=4, x=740.0, y=236.0, is_attacking=True),
-            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
-            Enemy(id=6, x=1200.0, y=236.0, is_attacking=True),
+            Enemy(id=1, x=384.0, y=98.0),
+            Enemy(id=2, x=384.0, y=236.0),
+            Enemy(id=3, x=740.0, y=98.0),
+            Enemy(id=4, x=740.0, y=236.0),
+            Enemy(id=5, x=1200.0, y=98.0),
+            Enemy(id=6, x=1200.0, y=236.0),
         ]
 
         observation = self._get_obs()
@@ -170,30 +170,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
-            is_moving = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                is_moving = False
-            if (
-                not (self.enemies[4].dead and self.enemies[5].dead)
-                and self.player_x > 910
-            ):
-                self.player_x = 910
-                is_moving = False
-
-            rewardX = offset_x if is_moving else 0
+                rewardX = offset_x
 
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
@@ -328,7 +307,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if distance_x < enemy.distance_threshold + 50:
+                if abs(distance_x) < enemy.distance_threshold + 50:
                     enemy.is_attacking = True
                 else:
                     enemy.is_attacking = False
@@ -349,7 +328,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 # Shoot & Enemy Dead
                 if (
                     abs(shift_rays) < 20
-                    and distance_x < enemy.distance_threshold
+                    and abs(distance_x) < enemy.distance_threshold
                     and gun["animation"]
                 ):
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
@@ -398,26 +377,15 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 }
             )
 
-        # player_coordinates = (self.player_x, self.player_y)
-        # gem_coordinates = (GEM_POSITION["x"], GEM_POSITION["y"])
-        # player_gem_distance = dist(player_coordinates, gem_coordinates)
-        # self.reward += 4 / player_gem_distance
-
         self.reward += rewardX
 
         if self.player_health <= 0:
+            self.player_health = 0
             self.reward -= 100
             self.done = True
 
-        # if (self.enemy_death_count == len(self.enemies)) and (
-        # ):
         if self.player_x >= GEM_POSITION["x"] - 20:
             self.done = True
-            # self.reward += 1000
-
-        # if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
-        #     self.reward -= 500
-        #     self.done = True
 
         current_ammo_count = self.ammo_count
         current_damage_taken = 100 - self.player_health
@@ -472,7 +440,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         for item in self.zbuffer:
             self.window.blit(item["image"], (item["x"], item["y"]))
 
-        # render gun / gun animation
+        # Render gun / gun animation
         self.window.blit(gun["default"], (60, 20))
         if gun["animation"]:
             gun["animation"] = True
