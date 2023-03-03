@@ -170,9 +170,30 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
+            is_moving = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-                rewardX = offset_x
+
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                is_moving = False
+            if (
+                not (self.enemies[2].dead and self.enemies[3].dead)
+                and self.player_x > 460
+            ):
+                self.player_x = 460
+                is_moving = False
+            if (
+                not (self.enemies[4].dead and self.enemies[5].dead)
+                and self.player_x > 910
+            ):
+                self.player_x = 910
+                is_moving = False
+
+            rewardX = offset_x if is_moving else 0
 
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
