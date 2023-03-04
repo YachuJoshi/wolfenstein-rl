@@ -27,8 +27,7 @@ parser.add_argument(
     "--skill",
     type=int,
     help="Specify Enemy Skill Level",
-    required="--train" in sys.argv
-    or ("--level" in ("basic", "deadly") and "--test" in sys.argv),
+    required="--level" == "deadly",
 )
 parser.add_argument(
     "--steps",
