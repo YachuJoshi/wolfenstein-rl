@@ -74,13 +74,15 @@ MAP_DEFEND = list(
     "SSSSSSSSSS"
 )
 
-MAP_DEADLY_CORRIDOR = list(
-    "SSSSSSSSSSSSSSSSSSSSSS"
-    "S      S      S      S"
-    "S                    S"
-    "S      S      S      S"
-    "SSSSSSSSSSSSSSSSSSSSSS"
-)
+# MAP_DEADLY_CORRIDOR = list(
+#     "SSSSSSSSSSSSSSSSSSSSSS"
+#     "S      S      S      S"
+#     "S                    S"
+#     "S      S      S      S"
+#     "SSSSSSSSSSSSSSSSSSSSSS"
+# )
+
+MAP_DEADLY_CORRIDOR = list("SSSSSSSS" "S      S" "S      S" "S      S" "SSSSSSSS")
 
 MAP_LIST = [
     {
@@ -101,7 +103,7 @@ MAP_LIST = [
     {
         "name": "DEADLY",
         "map": MAP_DEADLY_CORRIDOR,
-        "map_size": 22,
+        "map_size": 8,
     },
 ]
 

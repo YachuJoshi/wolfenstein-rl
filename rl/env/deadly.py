@@ -129,10 +129,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.enemies = [
             Enemy(id=1, x=384.0, y=98.0),
             Enemy(id=2, x=384.0, y=236.0),
-            Enemy(id=3, x=740.0, y=98.0),
-            Enemy(id=4, x=740.0, y=236.0),
-            Enemy(id=5, x=1200.0, y=98.0),
-            Enemy(id=6, x=1200.0, y=236.0),
+            # Enemy(id=3, x=740.0, y=98.0),
+            # Enemy(id=4, x=740.0, y=236.0),
+            # Enemy(id=5, x=1200.0, y=98.0),
+            # Enemy(id=6, x=1200.0, y=236.0),
         ]
 
         observation = self._get_obs()
@@ -172,31 +172,31 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 1:
             self.player_angle -= 0.05
 
-        elif action == 2 and self.player_x < 1265.0:
-            is_moving = True
+        elif action == 2 and self.player_x < 400.0:
+            # is_moving = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
+                rewardX = offset_x
+            # if (
+            #     not (self.enemies[0].dead and self.enemies[1].dead)
+            #     and self.player_x > 87
+            # ):
+            #     self.player_x = 87
+            #     is_moving = False
+            # if (
+            #     not (self.enemies[2].dead and self.enemies[3].dead)
+            #     and self.player_x > 460
+            # ):
+            #     self.player_x = 460
+            #     is_moving = False
+            # if (
+            #     not (self.enemies[4].dead and self.enemies[5].dead)
+            #     and self.player_x > 910
+            # ):
+            #     self.player_x = 910
+            #     is_moving = False
 
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                is_moving = False
-            if (
-                not (self.enemies[4].dead and self.enemies[5].dead)
-                and self.player_x > 910
-            ):
-                self.player_x = 910
-                is_moving = False
-
-            rewardX = offset_x if is_moving else 0
+            # rewardX = offset_x if is_moving else 0
 
         elif action == 3 and self.player_x > 86.0:
             if MAP[target_x] in " e":
@@ -407,7 +407,10 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.reward -= 100
             self.done = True
 
-        if self.player_x >= GEM_POSITION["x"] - 20:
+        # if self.player_x >= GEM_POSITION["x"] - 20:
+        #     self.done = True
+
+        if self.enemy_death_count == len(self.enemies):
             self.done = True
 
         current_ammo_count = self.ammo_count

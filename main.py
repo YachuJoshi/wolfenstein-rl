@@ -11,9 +11,12 @@ from src.argsparser import args
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         render_mode = None if args.train else "human"
-        n_steps = get_n_steps(args.level)
-        config = DEADLY_CONFIG if args.level == "deadly" else NORMAL_CONFIG
-
+        # n_steps = get_n_steps(args.level)
+        # config = DEADLY_CONFIG if args.level == "deadly" else NORMAL_CONFIG
+        n_steps = 2048
+        config = {
+            "learning_rate": 0.0001,
+        }
         if args.level in ("basic", "defend"):
             env = get_env(level=args.level, mode=render_mode)
             log_dir, model_save_dir = get_dir(level=args.level)
