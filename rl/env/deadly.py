@@ -27,7 +27,10 @@ head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
-GEM_POSITION = {"x": 1260.0, "y": 182.0}
+GEM_POSITION = {
+    "x": 1280.0,
+    "y": 160.0,
+}
 
 TypeStep = Tuple[np.ndarray, float, bool, dict]
 DifficultyMode = Literal["easy", "medium", "hard", "insane"]
@@ -124,12 +127,12 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         #     Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
         # ]
         self.enemies = [
-            Enemy(id=1, x=384.0, y=98.0, is_attacking=True),
-            Enemy(id=2, x=384.0, y=236.0, is_attacking=True),
-            Enemy(id=3, x=740.0, y=98.0, is_attacking=True),
-            Enemy(id=4, x=740.0, y=236.0, is_attacking=True),
-            Enemy(id=5, x=1200.0, y=98.0, is_attacking=True),
-            Enemy(id=6, x=1200.0, y=236.0, is_attacking=True),
+            Enemy(id=1, x=384.0, y=98.0),
+            Enemy(id=2, x=384.0, y=236.0),
+            Enemy(id=3, x=740.0, y=98.0),
+            Enemy(id=4, x=740.0, y=236.0),
+            Enemy(id=5, x=1200.0, y=98.0),
+            Enemy(id=6, x=1200.0, y=236.0),
         ]
 
         observation = self._get_obs()
@@ -398,26 +401,14 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 }
             )
 
-        # player_coordinates = (self.player_x, self.player_y)
-        # gem_coordinates = (GEM_POSITION["x"], GEM_POSITION["y"])
-        # player_gem_distance = dist(player_coordinates, gem_coordinates)
-        # self.reward += 4 / player_gem_distance
-
         self.reward += rewardX
 
         if self.player_health <= 0:
             self.reward -= 100
             self.done = True
 
-        # if (self.enemy_death_count == len(self.enemies)) and (
-        # ):
         if self.player_x >= GEM_POSITION["x"] - 20:
             self.done = True
-            # self.reward += 1000
-
-        # if self.ammo_count == 0 and self.enemy_death_count < len(self.enemies):
-        #     self.reward -= 500
-        #     self.done = True
 
         current_ammo_count = self.ammo_count
         current_damage_taken = 100 - self.player_health
