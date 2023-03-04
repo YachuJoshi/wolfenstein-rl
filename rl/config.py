@@ -5,6 +5,6 @@ NORMAL_CONFIG = {
 DEADLY_CONFIG = {
     "learning_rate": 0.00001,
     "clip_range": 0.1,
-    "gamma": 0.95,
+    "gamma": 0.99,
     "gae_lambda": 0.9,
 }
