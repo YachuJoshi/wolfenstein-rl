@@ -279,7 +279,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
                 # Shoot & Enemy Dead
                 if abs(shift_rays) < 20 and distance < 280 and gun["animation"]:
                     self._enemy_hit(enemy, index)
-                    self.reward += 1
+                    self.reward = 1
 
                 if distance <= 10:
                     self.player_health -= 25
