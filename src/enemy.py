@@ -35,7 +35,7 @@ class Enemy:
             enemy.subsurface(frame * 64, 6 * 64, 64, 64) for frame in range(1, 3)
         ]
         self.diagonal_walking_animation_list = [
-            enemy.subsurface(frame * 64, 0, 64, 64) for frame in range(1, 5)
+            enemy.subsurface(0, frame * 64, 64, 64) for frame in range(1, 5)
         ]
         self.left_walking_animation_list = [
             enemy.subsurface(128, frame * 64, 64, 64) for frame in range(1, 5)
