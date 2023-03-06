@@ -62,16 +62,16 @@ MAP_BASIC = list(
 
 
 MAP_DEFEND = list(
-    "SSSSSSSSSS"
-    "S        S"
-    "S        S"
-    "S        S"
-    "S        S"
-    "S        S"
-    "S        S"
-    "S        S"
-    "S        S"
-    "SSSSSSSSSS"
+    "BBBBBBBBBB"
+    "B        B"
+    "B        B"
+    "B        B"
+    "B        B"
+    "B        B"
+    "B        B"
+    "B        B"
+    "B        B"
+    "BBBBBBBBBB"
 )
 
 MAP_DEADLY_CORRIDOR = list(

@@ -5,10 +5,15 @@ background = pygame.image.load("./images/textures/background.png").convert()
 walls = pygame.image.load("./images/textures/walls.png").convert()
 textures = {
     "S": walls.subsurface(0, 0, 64, 64),
+    "B": walls.subsurface(2 * 64, 5 * 64, 64, 64),
 }
 
 # sprites
+flag = pygame.transform.scale(
+    pygame.image.load("./images/sprites/flag.png").convert_alpha(), (128, 128)
+)
 enemy = pygame.image.load("./images/sprites/enemy.png").convert_alpha()
+running_enemy = pygame.image.load("./images/sprites/running.png").convert_alpha()
 
 # gun
 gun = {
