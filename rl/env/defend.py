@@ -80,7 +80,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
     def _regenerate_enemies(self, index: int) -> None:
         self.enemies = list(filter(lambda enemy: (enemy.id != index), self.enemies))
         x, y = coordinates[index - 1]
-        self.enemies.append(Enemy(id=index, x=x, y=y, static=False, is_defend=True))
+        self.enemies.append(Enemy(id=index, x=x, y=y, static=False))
         self.enemies = sorted(self.enemies, key=lambda enemy: enemy.id)
 
     def _enemy_hit(self, enemy: Enemy, index: int) -> None:
@@ -102,7 +102,7 @@ class WolfensteinDefendTheCenterEnv(gym.Env):
         self.player_health = 100
         self.ammo_count = 100
         self.enemies = [
-            Enemy(id=index, x=x, y=y, static=False, is_defend=True)
+            Enemy(id=index, x=x, y=y, static=False)
             for index, (x, y) in enumerate(coordinates, start=1)
         ]
 

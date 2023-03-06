@@ -1,4 +1,4 @@
-from src.textures import enemy, running_enemy
+from src.textures import enemy
 
 
 class Enemy:
@@ -8,7 +8,6 @@ class Enemy:
         x: float,
         y: float,
         static: bool = True,
-        is_defend: bool = False,
         is_attacking: bool = False,
         distance_threshold: int = 300,
     ):
@@ -28,11 +27,7 @@ class Enemy:
         self.right_index = 0
         self.is_attacking = is_attacking
         self.distance_threshold = distance_threshold
-        self.image = (
-            running_enemy.subsurface(0, 0, 64, 64)
-            if is_defend
-            else enemy.subsurface(0, 0, 64, 64)
-        )
+        self.image = enemy.subsurface(0, 0, 64, 64)
         self.death_animation_list = [
             enemy.subsurface(frame * 64, 5 * 64, 64, 64) for frame in range(1, 5)
         ]
@@ -40,7 +35,7 @@ class Enemy:
             enemy.subsurface(frame * 64, 6 * 64, 64, 64) for frame in range(1, 3)
         ]
         self.diagonal_walking_animation_list = [
-            running_enemy.subsurface(frame * 64, 0, 64, 64) for frame in range(0, 4)
+            enemy.subsurface(frame * 64, 0, 64, 64) for frame in range(1, 5)
         ]
         self.left_walking_animation_list = [
             enemy.subsurface(128, frame * 64, 64, 64) for frame in range(1, 5)

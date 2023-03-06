@@ -8,8 +8,7 @@ from src.base import *
 from src.screen import *
 from src.font import font
 from src.enemy import Enemy
-from src.textures import flag
-from src.textures import background, gun, textures
+from src.textures import background, gun, textures, flag
 
 from collections import namedtuple
 from typing import Union, Tuple, Literal, Dict
