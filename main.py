@@ -5,10 +5,11 @@ from rl.test import test, test
 from rl.train import train, curr_learn
 
 from src.utils import *
-from src.argsparser import args
+from src.argsparser import parse_args
 
 
 if __name__ == "__main__":
+    args = parse_args()
     if len(sys.argv) > 1:
         render_mode = None if args.train else "human"
         n_steps = get_n_steps(args.level)
