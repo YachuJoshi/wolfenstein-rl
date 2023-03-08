@@ -74,7 +74,17 @@ MAP_DEFEND = list(
     "SSSSSSSSSS"
 )
 
-MAP_DEADLY_CORRIDOR = list(
+MAP_DEADLY_EASY = list("SSSSSSSS" "S      S" "S      S" "S      S" "SSSSSSSS")
+
+MAP_DEADLY_MEDIUM = list(
+    "SSSSSSSSSSSSSSS"
+    "S      S      S"
+    "S             S"
+    "S      S      S"
+    "SSSSSSSSSSSSSSS"
+)
+
+MAP_DEADLY_HARD = list(
     "SSSSSSSSSSSSSSSSSSSSSS"
     "S      S      S      S"
     "S                    S"
@@ -98,9 +108,22 @@ MAP_LIST = [
         "map": MAP_DEFEND,
         "map_size": 10,
     },
+]
+
+MAP_DEADLY_CORRIDOR = [
     {
-        "name": "DEADLY",
-        "map": MAP_DEADLY_CORRIDOR,
+        "name": "DEADLY_EASY",
+        "map": MAP_DEADLY_EASY,
+        "map_size": 8,
+    },
+    {
+        "name": "DEADLY_MEDIUM",
+        "map": MAP_DEADLY_MEDIUM,
+        "map_size": 15,
+    },
+    {
+        "name": "DEADLY_HARD",
+        "map": MAP_DEADLY_HARD,
         "map_size": 22,
     },
 ]
@@ -109,7 +132,16 @@ MAP_LIST = [
 def get_map_details(
     map_name: str,
 ) -> Tuple[List[str], int, float, float]:
-    map = list(filter(lambda map_item: map_item["name"] == map_name, MAP_LIST))[0]
+    if map_name in ("BASIC", "DEFEND", "DEMO"):
+        map = list(filter(lambda map_item: map_item["name"] == map_name, MAP_LIST))[0]
+        MAP_RANGE: float = map["map_size"] * MAP_SCALE
+        MAP_SPEED: float = (MAP_SCALE / 2) / 10
+        return (map["map"], map["map_size"], MAP_RANGE, MAP_SPEED)
+
+    # Deadly
+    map = list(
+        filter(lambda map_item: map_item["name"] == map_name, MAP_DEADLY_CORRIDOR)
+    )[0]
     MAP_RANGE: float = map["map_size"] * MAP_SCALE
     MAP_SPEED: float = (MAP_SCALE / 2) / 10
     return (map["map"], map["map_size"], MAP_RANGE, MAP_SPEED)
