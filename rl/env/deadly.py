@@ -1,7 +1,6 @@
 import os
 import cv2
 import gym
-import copy
 import pygame
 import numpy as np
 
@@ -28,39 +27,18 @@ head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 Point = namedtuple("Point", ("x", "y"))
 INITIAL_ANGLE = 1.55
-FLAG = {
-    "x": 1280.0,
-    "y": 160.0,
-    "shift": 0.4,
-    "scale": 1.0,
-    "image": flag,
-}
 
 TypeStep = Tuple[np.ndarray, float, bool, dict]
 DifficultyMode = Literal["easy", "medium", "hard", "insane"]
 RenderMode = Union[Literal["human"], Literal["rgb_array"], None]
 
-MODE: Dict[str, float] = {
-    "easy": 0.8,
-    "medium": 0.6,
-    "hard": 0.4,
-}
+FLAG_X = {"easy": 600.0, "medium": 840.0, "hard": 1280.0}
 
 LEVEL: Dict[str, str] = {
     "easy": "DEADLY_EASY",
     "medium": "DEADLY_MEDIUM",
     "hard": "DEADLY_HARD",
 }
-
-ENEMIES = [
-    Enemy(id=1, x=384.0, y=98.0),
-    Enemy(id=2, x=384.0, y=236.0),
-    Enemy(id=3, x=740.0, y=98.0),
-    Enemy(id=4, x=740.0, y=236.0),
-    Enemy(id=5, x=1200.0, y=98.0),
-    Enemy(id=6, x=1200.0, y=236.0),
-]
-
 
 MAX_STEPS = 4200
 
@@ -91,6 +69,13 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.player_y = 160.0
         self.player_angle = INITIAL_ANGLE
         self.player_health = 100
+        self.flag = {
+            "x": FLAG_X[difficulty_mode],
+            "y": 160.0,
+            "shift": 0.4,
+            "scale": 1.0,
+            "image": flag,
+        }
         self.steps = 0
         self.zbuffer = []
 
@@ -103,7 +88,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         # Curriculum Learning
         self.mode = difficulty_mode
-        self.threshold = MODE[difficulty_mode]
+        self.threshold = 0.4
         self.map_name = LEVEL[difficulty_mode]
         self.MAP, self.MAP_SIZE, self.MAP_RANGE, self.MAP_SPEED = get_map_details(
             self.map_name
@@ -144,6 +129,58 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return enemies
 
+    def _get_rewardX(self, offset_x):
+        is_moving = True
+
+        if self.mode == "easy":
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                is_moving = False
+            return offset_x if is_moving else 0
+
+        if self.mode == "medium":
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                is_moving = False
+
+            if (
+                not (self.enemies[2].dead and self.enemies[3].dead)
+                and self.player_x > 460
+            ):
+                self.player_x = 460
+                is_moving = False
+
+            return offset_x if is_moving else 0
+
+        if self.mode == "hard":
+            if (
+                not (self.enemies[0].dead and self.enemies[1].dead)
+                and self.player_x > 87
+            ):
+                self.player_x = 87
+                is_moving = False
+
+            if (
+                not (self.enemies[2].dead and self.enemies[3].dead)
+                and self.player_x > 460
+            ):
+                self.player_x = 460
+                is_moving = False
+            if (
+                not (self.enemies[4].dead and self.enemies[5].dead)
+                and self.player_x > 910
+            ):
+                self.player_x = 910
+                is_moving = False
+
+            return offset_x if is_moving else 0
+
     def reset(self) -> np.ndarray:
         self.steps = 0
         self.reward = 0
@@ -158,14 +195,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         self.ammo = self.ammo_count
         self.player_health = 100
         self.player_angle = INITIAL_ANGLE
-        # self.enemies = [
-        #     Enemy(id=1, x=304.0, y=98.0),
-        #     Enemy(id=2, x=450.0, y=236.0),
-        #     Enemy(id=3, x=680.0, y=98.0, distance_threshold=180),
-        #     Enemy(id=4, x=850.0, y=236.0, distance_threshold=180),
-        #     Enemy(id=5, x=1200.0, y=98.0, distance_threshold=180),
-        #     Enemy(id=6, x=1250.0, y=236.0, distance_threshold=180),
-        # ]
         self.enemies = self._get_enemies()
 
         observation = self._get_obs()
@@ -206,30 +235,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
-            is_moving = True
             if self.MAP[target_x] in " e":
                 self.player_x += offset_x
-
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                is_moving = False
-            if (
-                not (self.enemies[4].dead and self.enemies[5].dead)
-                and self.player_x > 910
-            ):
-                self.player_x = 910
-                is_moving = False
-
-            rewardX = offset_x if is_moving else 0
+                rewardX = self._get_rewardX(offset_x)
 
         elif action == 3 and self.player_x > 86.0:
             if self.MAP[target_x] in " e":
@@ -442,8 +450,8 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
                 }
             )
 
-        flag_x = FLAG["x"] - self.player_x
-        flag_y = FLAG["y"] - self.player_y
+        flag_x = self.flag["x"] - self.player_x
+        flag_y = self.flag["y"] - self.player_y
 
         sprite_distance = sqrt(flag_x * flag_x + flag_y * flag_y)
         sprite2player_angle = atan2(flag_x, flag_y)
@@ -460,17 +468,17 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         sprite_ray = CENTRAL_RAY - shift_rays
 
         sprite_height = min(
-            FLAG["scale"] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
+            self.flag["scale"] * MAP_SCALE * 300 / (sprite_distance + 0.0001), 400
         )
         sprite_image = pygame.transform.scale(
-            FLAG["image"], (int(sprite_height), int(sprite_height))
+            self.flag["image"], (int(sprite_height), int(sprite_height))
         )
 
         self.zbuffer.append(
             {
                 "image": sprite_image,
                 "x": sprite_ray - int(sprite_height / 2),
-                "y": 100 - sprite_height * FLAG["shift"],
+                "y": 100 - sprite_height * self.flag["shift"],
                 "distance": sprite_distance,
             }
         )
@@ -482,7 +490,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.reward -= 100
             self.done = True
 
-        if self.player_x >= FLAG["x"] - 50:
+        if self.player_x >= self.flag["x"] - 50:
             self.done = True
 
         current_ammo_count = self.ammo_count

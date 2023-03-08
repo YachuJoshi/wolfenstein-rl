@@ -74,7 +74,9 @@ MAP_DEFEND = list(
     "SSSSSSSSSS"
 )
 
-MAP_DEADLY_EASY = list("SSSSSSSS" "S      S" "S      S" "S      S" "SSSSSSSS")
+MAP_DEADLY_EASY = list(
+    "SSSSSSSSSSSS" "S      S   S" "S          S" "S      S   S" "SSSSSSSSSSSS"
+)
 
 MAP_DEADLY_MEDIUM = list(
     "SSSSSSSSSSSSSSS"
@@ -114,7 +116,7 @@ MAP_DEADLY_CORRIDOR = [
     {
         "name": "DEADLY_EASY",
         "map": MAP_DEADLY_EASY,
-        "map_size": 8,
+        "map_size": 12,
     },
     {
         "name": "DEADLY_MEDIUM",
