@@ -1,8 +1,8 @@
 import torch
 from gym import Env
 
-from rl.ppo import PPO
-from rl.utils.callback import TrainAndLoggingCallback
+from rl.core.ppo import PPO
+from rl.common.callback import TrainAndLoggingCallback
 
 from typing import Literal
 
@@ -10,9 +10,6 @@ Policy = Literal["MlpPolicy", "CnnPolicy"]
 
 
 def get_device() -> torch.device:
-    # if torch.backends.mps.is_available():
-    #     return torch.device("mps")
-
     if torch.cuda.is_available():
         return torch.device("cuda")
 

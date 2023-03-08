@@ -5,9 +5,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
 import gym
 import torch
 import numpy as np
+from rl.common.rollout_buffer import RolloutBuffer
 
 from stable_baselines3.common.base_class import BaseAlgorithm
-from stable_baselines3.common.buffers import DictRolloutBuffer, RolloutBuffer
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
@@ -72,13 +72,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
         self._setup_lr_schedule()
         self.set_random_seed(self.seed)
 
-        buffer_cls = (
-            DictRolloutBuffer
-            if isinstance(self.observation_space, gym.spaces.Dict)
-            else RolloutBuffer
-        )
-
-        self.rollout_buffer = buffer_cls(
+        self.rollout_buffer = RolloutBuffer(
             self.n_steps,
             self.observation_space,
             self.action_space,
@@ -105,7 +99,7 @@ class OnPolicyAlgorithm(BaseAlgorithm):
     ) -> bool:
         assert self._last_obs is not None, "No previous observation was provided"
 
-        # Switch to eval mode (this affects batch norm / dropout)
+        # Switch to eval mode
         self.policy.set_training_mode(False)
 
         n_steps = 0

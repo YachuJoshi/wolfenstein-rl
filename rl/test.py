@@ -1,6 +1,7 @@
 import time
 from gym import Env
-from rl.ppo import PPO
+
+from rl.core.ppo import PPO
 
 
 def test_random(env: Env, episodes: int = 10) -> None:

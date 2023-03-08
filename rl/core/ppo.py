@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from gym import spaces
 from torch.nn import functional as F
-from rl.on_policy_algorithm import OnPolicyAlgorithm
+from rl.core.on_policy_algorithm import OnPolicyAlgorithm
 
 from stable_baselines3.common.policies import (
     ActorCriticCnnPolicy,
@@ -80,8 +80,6 @@ class PPO(OnPolicyAlgorithm):
             ),
         )
 
-        # Sanity check, otherwise it will lead to noisy gradient and NaN
-        # because of the advantage normalization
         if normalize_advantage:
             assert batch_size > 1, "`batch_size` must be greater than 1."
 
