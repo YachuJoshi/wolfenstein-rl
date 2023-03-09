@@ -58,6 +58,7 @@ if __name__ == "__main__":
                     curr_learn(
                         new_env=new_env,
                         total_steps=2000000,
+                        tensorboard_log=new_log_dir,
                         model_save_path=new_model_save_path,
                         prev_model_load_path=prev_model_path,
                     )
