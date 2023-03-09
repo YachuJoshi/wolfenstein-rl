@@ -60,7 +60,7 @@ def get_n_steps(level: Level) -> int:
 
 
 ## Curriculum Learning - Deadly Corridor Utilities
-def get_deadly_model_path(deadly_mode: DeadlyMode, steps: int = 700000) -> str:
+def get_deadly_model_path(deadly_mode: DeadlyMode, steps: int = 800000) -> str:
     return f"./models/deadly/cnn/{deadly_mode}/model_{steps}"
 
 

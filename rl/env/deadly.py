@@ -129,58 +129,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
         return enemies
 
-    def _get_rewardX(self, offset_x):
-        is_moving = True
-
-        if self.mode == "easy":
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-            return offset_x if is_moving else 0
-
-        if self.mode == "medium":
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                is_moving = False
-
-            return offset_x if is_moving else 0
-
-        if self.mode == "hard":
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                is_moving = False
-
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                is_moving = False
-            if (
-                not (self.enemies[4].dead and self.enemies[5].dead)
-                and self.player_x > 910
-            ):
-                self.player_x = 910
-                is_moving = False
-
-            return offset_x if is_moving else 0
-
     def reset(self) -> np.ndarray:
         self.steps = 0
         self.reward = 0
@@ -237,7 +185,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         elif action == 2 and self.player_x < 1265.0:
             if self.MAP[target_x] in " e":
                 self.player_x += offset_x
-                rewardX = self._get_rewardX(offset_x)
+                rewardX = offset_x
 
         elif action == 3 and self.player_x > 86.0:
             if self.MAP[target_x] in " e":
@@ -517,9 +465,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         observation = self._get_obs()
         reward = (
             self.reward
-            + damage_difference * -20
+            + damage_difference * -80
             + enemy_count_difference * 100
-            + ammo_difference * -5
+            + ammo_difference * -3
         )
         done = self.done
         info = self._get_info()

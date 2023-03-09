@@ -43,7 +43,10 @@ if __name__ == "__main__":
 
                 if args.curr:
                     prev_skill_level = deadly_modes[str(args.skill - 1)]
-                    prev_model_path = get_deadly_model_path(prev_skill_level)
+                    prev_model_path = get_deadly_model_path(
+                        deadly_mode=prev_skill_level,
+                        steps=args.model_load,
+                    )
                     new_log_dir, new_model_save_path = get_deadly_model_dir(
                         curr_mode=skill_level
                     )

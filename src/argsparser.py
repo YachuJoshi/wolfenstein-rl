@@ -24,6 +24,17 @@ def parse_args():
         action="store_true",
         help="Initiate Curriculum Learning Mode",
     )
+    parser.add_argument(
+        "--model-load",
+        type=int,
+        default=800000,
+        help="Specifies the model load to use (default: %(default)s)",
+        required=False,
+        nargs="?",
+        const=lambda x: x
+        if args.curr
+        else parser.error("--model-load cannot be used without --curr"),
+    )
     mode.add_argument("--test", action="store_true", help="Initiate Testing Mode")
     parser.add_argument(
         "--skill",
