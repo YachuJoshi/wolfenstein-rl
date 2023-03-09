@@ -2,7 +2,12 @@ import sys
 import argparse
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
+    """Get all the parsed command line argument
+
+    Returns:
+        argparse.Namespace: CLI argument parser
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--seed",

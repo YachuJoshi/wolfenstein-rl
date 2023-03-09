@@ -1,10 +1,11 @@
 import sys
 
 from rl.config import *
-from rl.test import test, test
+from rl.test import test
 from rl.train import train, curr_learn
 
-from src.utils import *
+from rl.common.utils import *
+
 from src.argsparser import parse_args
 
 
