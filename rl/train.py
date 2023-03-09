@@ -48,4 +48,6 @@ def train(
     # model.load(
     #     "D:\Volume D internal\study material\sem 8\wolfenstein CNN\wolfenstein-rl\models\deadly\\model_500000.zip"
     # )
+    model = PPO.load("./best models/deadly_model_800000.zip")
+    model.set_env(env, force_reset=True)
     model.learn(total_timesteps=total_steps, callback=callback)

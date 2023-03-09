@@ -6,7 +6,7 @@ from src.utils import get_env, get_dir, get_model_dir, get_train_env_mode
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        render_mode = get_train_env_mode(args.level) if args.train else "human"
+        render_mode = None if args.train else "human"
         env = get_env(level=args.level, mode=render_mode)
         log_dir, model_save_dir = get_dir(level=args.level)
 

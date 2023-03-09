@@ -134,35 +134,36 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             self.player_angle -= 0.05
 
         elif action == 2 and self.player_x < 1265.0:
-            movement = True
+            # movement = True
             if MAP[target_x] in " e":
                 self.player_x += offset_x
-            if (
-                not (self.enemies[0].dead and self.enemies[1].dead)
-                and self.player_x > 87
-            ):
-                self.player_x = 87
-                movement = False
-            if (
-                not (self.enemies[2].dead and self.enemies[3].dead)
-                and self.player_x > 460
-            ):
-                self.player_x = 460
-                movement = False
-            if (
-                not (self.enemies[4].dead and self.enemies[5].dead)
-                and self.player_x > 910
-            ):
-                self.player_x = 910
-                movement = False
-            dx = offset_x if movement else 0
+                dx = offset_x
+            # if (
+            #     not (self.enemies[0].dead and self.enemies[1].dead)
+            #     and self.player_x > 87
+            # ):
+            #     self.player_x = 87
+            #     movement = False
+            # if (
+            #     not (self.enemies[2].dead and self.enemies[3].dead)
+            #     and self.player_x > 460
+            # ):
+            #     self.player_x = 460
+            #     movement = False
+            # if (
+            #     not (self.enemies[4].dead and self.enemies[5].dead)
+            #     and self.player_x > 910
+            # ):
+            #     self.player_x = 910
+            #     movement = False
+            # dx = offset_x if movement else 0
 
             # if MAP_DEADLY_CORRIDOR[target_y] in " e":
             #     self.player_y += offset_y
-        # elif action == 3 and self.player_x > 86.0:
-        #     if MAP[target_x] in " e":
-        #         self.player_x -= offset_x
-        #         dx = -offset_x
+        elif action == 3 and self.player_x > 86.0:
+            if MAP[target_x] in " e":
+                self.player_x -= offset_x
+                dx = -offset_x
         elif action == 4:
             if gun["animation"] == False:
                 gun["animation"] = True
@@ -291,7 +292,7 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             )
 
             if not enemy.dead:
-                if enemy.is_attacking and distance_x < enemy.distance_threshold:
+                if enemy.is_attacking and (distance_x) < enemy.distance_threshold:
                     enemy.image = enemy.attack_animation_list[
                         int(enemy.attack_index / 8)
                     ]
@@ -302,12 +303,11 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
 
                     if np.random.rand() < 1:
                         self.player_health -= 0.1
-                        print(self.player_health)
 
                 # Shoot & Enemy Dead
                 if (
                     abs(shift_rays) < 20
-                    and distance_x < enemy.distance_threshold
+                    and (distance_x) < enemy.distance_threshold
                     and gun["animation"]
                 ):
                     enemy.image = enemy.death_animation_list[int(enemy.death_count / 8)]
@@ -347,9 +347,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             sprite_image = pygame.transform.scale(
                 enemy.image, (int(sprite_height), int(sprite_height))
             )
-
-            # if enemy.image == enemy.death_animation_list[-1]:
-            #     sprite_image = pygame.transform.scale(enemy.image, (0, 0))
 
             self.zbuffer.append(
                 {
@@ -399,9 +396,9 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
         #     #accumulated reward
         total_reward = (
             self.reward
-            + damage_taken_delta * 20
+            + damage_taken_delta * 80
             + hitcount_delta * 100
-            + ammo_delta * 5
+            + ammo_delta * 3
         )
 
         observation = self._get_obs()
