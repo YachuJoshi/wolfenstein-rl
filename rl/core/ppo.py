@@ -1,28 +1,38 @@
-from typing import Any, Dict, Optional, Type, TypeVar, Union
+import sys
+import time
+from typing import Any, Dict, Tuple, List, Optional, Type, TypeVar, Union
 
+import gym
 import torch
 import numpy as np
-from gym import spaces
 from torch.nn import functional as F
-from rl.core.on_policy_algorithm import OnPolicyAlgorithm
+
+from rl.common.rollout_buffer import RolloutBuffer
 
 from stable_baselines3.common.policies import (
-    ActorCriticCnnPolicy,
-    ActorCriticPolicy,
     BasePolicy,
-    MultiInputActorCriticPolicy,
+    ActorCriticPolicy,
+    ActorCriticCnnPolicy,
 )
+from stable_baselines3.common.utils import (
+    explained_variance,
+    get_schedule_fn,
+    obs_as_tensor,
+    safe_mean,
+)
+from stable_baselines3.common.vec_env import VecEnv
+from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
-from stable_baselines3.common.utils import explained_variance, get_schedule_fn
+
 
 PPOSelf = TypeVar("PPOSelf", bound="PPO")
 
 
-class PPO(OnPolicyAlgorithm):
+class PPO(BaseAlgorithm):
     policy_aliases: Dict[str, Type[BasePolicy]] = {
         "MlpPolicy": ActorCriticPolicy,
         "CnnPolicy": ActorCriticCnnPolicy,
-        "MultiInputPolicy": MultiInputActorCriticPolicy,
     }
 
     def __init__(
@@ -52,31 +62,32 @@ class PPO(OnPolicyAlgorithm):
         device: Union[torch.device, str] = "auto",
         _init_setup_model: bool = True,
     ):
+        self.n_steps = n_steps
+        self.gamma = gamma
+        self.gae_lambda = gae_lambda
+        self.ent_coef = ent_coef
+        self.vf_coef = vf_coef
+        self.max_grad_norm = max_grad_norm
+        self.rollout_buffer = None
 
         super().__init__(
-            policy,
-            env,
+            policy=policy,
+            env=env,
             learning_rate=learning_rate,
-            n_steps=n_steps,
-            gamma=gamma,
-            gae_lambda=gae_lambda,
-            ent_coef=ent_coef,
-            vf_coef=vf_coef,
-            max_grad_norm=max_grad_norm,
-            use_sde=use_sde,
-            sde_sample_freq=sde_sample_freq,
-            tensorboard_log=tensorboard_log,
             policy_kwargs=policy_kwargs,
             verbose=verbose,
             device=device,
+            use_sde=use_sde,
+            sde_sample_freq=sde_sample_freq,
             create_eval_env=create_eval_env,
+            support_multi_env=True,
             seed=seed,
-            _init_setup_model=False,
+            tensorboard_log=tensorboard_log,
             supported_action_spaces=(
-                spaces.Box,
-                spaces.Discrete,
-                spaces.MultiDiscrete,
-                spaces.MultiBinary,
+                gym.spaces.Box,
+                gym.spaces.Discrete,
+                gym.spaces.MultiDiscrete,
+                gym.spaces.MultiBinary,
             ),
         )
 
@@ -94,7 +105,26 @@ class PPO(OnPolicyAlgorithm):
             self._setup_model()
 
     def _setup_model(self) -> None:
-        super()._setup_model()
+        self._setup_lr_schedule()
+        self.set_random_seed(self.seed)
+
+        self.rollout_buffer = RolloutBuffer(
+            self.n_steps,
+            self.observation_space,
+            self.action_space,
+            device=self.device,
+            gamma=self.gamma,
+            gae_lambda=self.gae_lambda,
+            n_envs=self.n_envs,
+        )
+        self.policy = self.policy_class(
+            self.observation_space,
+            self.action_space,
+            self.lr_schedule,
+            use_sde=self.use_sde,
+            **self.policy_kwargs,
+        )
+        self.policy = self.policy.to(self.device)
 
         # Initialize schedules for policy/value clipping
         self.clip_range = get_schedule_fn(self.clip_range)
@@ -106,6 +136,102 @@ class PPO(OnPolicyAlgorithm):
                 )
 
             self.clip_range_vf = get_schedule_fn(self.clip_range_vf)
+
+    def collect_rollouts(
+        self,
+        env: VecEnv,
+        callback: BaseCallback,
+        rollout_buffer: RolloutBuffer,
+        n_rollout_steps: int,
+    ) -> bool:
+        assert self._last_obs is not None, "No previous observation was provided"
+
+        # Switch to eval mode
+        self.policy.set_training_mode(False)
+
+        n_steps = 0
+        rollout_buffer.reset()
+
+        # Sample new weights for the state dependent exploration
+        if self.use_sde:
+            self.policy.reset_noise(env.num_envs)
+
+        callback.on_rollout_start()
+
+        while n_steps < n_rollout_steps:
+            if (
+                self.use_sde
+                and self.sde_sample_freq > 0
+                and n_steps % self.sde_sample_freq == 0
+            ):
+                # Sample a new noise matrix
+                self.policy.reset_noise(env.num_envs)
+
+            with torch.no_grad():
+                # Convert to pytorch tensor or to TensorDict
+                obs_tensor = obs_as_tensor(self._last_obs, self.device)
+                actions, values, log_probs = self.policy(obs_tensor)
+            actions = actions.cpu().numpy()
+
+            # Rescale and perform action
+            clipped_actions = actions
+
+            # Clip the actions to avoid out of bound error
+            if isinstance(self.action_space, gym.spaces.Box):
+                clipped_actions = np.clip(
+                    actions, self.action_space.low, self.action_space.high
+                )
+
+            new_obs, rewards, dones, infos = env.step(clipped_actions)
+
+            self.num_timesteps += env.num_envs
+
+            # Give access to local variables
+            callback.update_locals(locals())
+            if callback.on_step() is False:
+                return False
+
+            self._update_info_buffer(infos)
+            n_steps += 1
+
+            if isinstance(self.action_space, gym.spaces.Discrete):
+                # Reshape in case of discrete action
+                actions = actions.reshape(-1, 1)
+
+            # Handle timeout by bootstraping with value function
+            for idx, done in enumerate(dones):
+                if (
+                    done
+                    and infos[idx].get("terminal_observation") is not None
+                    and infos[idx].get("TimeLimit.truncated", False)
+                ):
+                    terminal_obs = self.policy.obs_to_tensor(
+                        infos[idx]["terminal_observation"]
+                    )[0]
+                    with torch.no_grad():
+                        terminal_value = self.policy.predict_values(terminal_obs)[0]
+                    rewards[idx] += self.gamma * terminal_value
+
+            rollout_buffer.add(
+                self._last_obs,
+                actions,
+                rewards,
+                self._last_episode_starts,
+                values,
+                log_probs,
+            )
+            self._last_obs = new_obs
+            self._last_episode_starts = dones
+
+        with torch.no_grad():
+            # Compute value for the last timestep
+            values = self.policy.predict_values(obs_as_tensor(new_obs, self.device))
+
+        rollout_buffer.compute_returns_and_advantage(last_values=values, dones=dones)
+
+        callback.on_rollout_end()
+
+        return True
 
     def train(self) -> None:
         """
@@ -136,7 +262,7 @@ class PPO(OnPolicyAlgorithm):
             # Do a complete pass on the rollout buffer
             for rollout_data in self.rollout_buffer.get(self.batch_size):
                 actions = rollout_data.actions
-                if isinstance(self.action_space, spaces.Discrete):
+                if isinstance(self.action_space, gym.spaces.Discrete):
                     # Convert discrete action from float to long
                     actions = rollout_data.actions.long().flatten()
 
@@ -269,15 +395,68 @@ class PPO(OnPolicyAlgorithm):
         progress_bar: bool = False,
     ) -> PPOSelf:
 
-        return super().learn(
-            total_timesteps=total_timesteps,
-            callback=callback,
-            log_interval=log_interval,
-            eval_env=eval_env,
-            eval_freq=eval_freq,
-            n_eval_episodes=n_eval_episodes,
-            tb_log_name=tb_log_name,
-            eval_log_path=eval_log_path,
-            reset_num_timesteps=reset_num_timesteps,
-            progress_bar=progress_bar,
+        iteration = 0
+
+        total_timesteps, callback = self._setup_learn(
+            total_timesteps,
+            eval_env,
+            callback,
+            eval_freq,
+            n_eval_episodes,
+            eval_log_path,
+            reset_num_timesteps,
+            tb_log_name,
+            progress_bar,
         )
+
+        callback.on_training_start(locals(), globals())
+
+        while self.num_timesteps < total_timesteps:
+
+            continue_training = self.collect_rollouts(
+                self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps
+            )
+
+            if continue_training is False:
+                break
+
+            iteration += 1
+            self._update_current_progress_remaining(self.num_timesteps, total_timesteps)
+
+            # Display training infos
+            if log_interval is not None and iteration % log_interval == 0:
+                time_elapsed = max(
+                    (time.time_ns() - self.start_time) / 1e9, sys.float_info.epsilon
+                )
+                fps = int(
+                    (self.num_timesteps - self._num_timesteps_at_start) / time_elapsed
+                )
+                self.logger.record("time/iterations", iteration, exclude="tensorboard")
+                if len(self.ep_info_buffer) > 0 and len(self.ep_info_buffer[0]) > 0:
+                    self.logger.record(
+                        "rollout/ep_rew_mean",
+                        safe_mean([ep_info["r"] for ep_info in self.ep_info_buffer]),
+                    )
+                    self.logger.record(
+                        "rollout/ep_len_mean",
+                        safe_mean([ep_info["l"] for ep_info in self.ep_info_buffer]),
+                    )
+                self.logger.record("time/fps", fps)
+                self.logger.record(
+                    "time/time_elapsed", int(time_elapsed), exclude="tensorboard"
+                )
+                self.logger.record(
+                    "time/total_timesteps", self.num_timesteps, exclude="tensorboard"
+                )
+                self.logger.dump(step=self.num_timesteps)
+
+            self.train()
+
+        callback.on_training_end()
+
+        return self
+
+    def _get_torch_save_params(self) -> Tuple[List[str], List[str]]:
+        state_dicts = ["policy", "policy.optimizer"]
+
+        return state_dicts, []
