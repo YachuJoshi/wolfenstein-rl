@@ -6,7 +6,6 @@ import numpy as np
 
 from src.base import *
 from src.screen import *
-from src.font import font
 from src.enemy import Enemy
 from src.textures import background, gun, textures, flag
 
@@ -15,14 +14,6 @@ from typing import Union, Tuple, Literal, Dict
 
 from gym.spaces import Box, Discrete
 from math import sin, cos, sqrt, atan2, degrees
-
-FILE_PATH = "images/sprites"
-bullet = pygame.image.load(os.path.join(FILE_PATH, "bullet.png")).convert_alpha()
-heart = pygame.image.load(os.path.join(FILE_PATH, "heart.png")).convert_alpha()
-head = pygame.image.load(os.path.join(FILE_PATH, "head.png")).convert_alpha()
-bullet_rect = bullet.get_rect(topright=(WIDTH - 50, 10))
-heart_rect = heart.get_rect(topleft=(10, 10))
-head_rect = head.get_rect(midtop=(WIDTH / 2 - 14, 10))
 
 
 Point = namedtuple("Point", ("x", "y"))
@@ -503,23 +494,6 @@ class WolfensteinDeadlyCorridorEnv(gym.Env):
             if gun["shot_count"] >= 20:
                 gun["shot_count"] = 0
                 gun["animation"] = False
-
-        self.window.blit(head, head_rect)
-        self.window.blit(heart, heart_rect)
-        self.window.blit(bullet, bullet_rect)
-
-        health = font.render(f": {self.player_health}", False, "white")
-        health_bounding_rect = health.get_rect(topleft=(40, 10))
-
-        ammo_text = font.render(f": {self.ammo_count}", False, "white")
-        ammo_bounding_rect = ammo_text.get_rect(topright=(WIDTH - 10, 10))
-
-        kills_text = font.render(f": {int(self.enemy_death_count)}", False, "white")
-        kills_bounding_rect = kills_text.get_rect(midtop=(WIDTH / 2 + 14, 10))
-
-        self.window.blit(health, health_bounding_rect)
-        self.window.blit(ammo_text, ammo_bounding_rect)
-        self.window.blit(kills_text, kills_bounding_rect)
 
         if self.render_mode == "human":
             pygame.event.pump()
