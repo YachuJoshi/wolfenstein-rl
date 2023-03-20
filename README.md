@@ -38,6 +38,50 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
 
 ![Deadly Final Result](./gif/deadly-final.gif)
 
+## Plots:
+
+## Basic
+
+![Episode Reward Plot](./plot/basic-plot-1.png)
+
+<p align=center>
+    <em>Fig: Basic Level Episode Length & Reward Plot</em>
+</p>
+
+![Loss Plot](./plot/basic-plot-2.png)
+
+<p align=center>
+    <em>Fig: Basic Level Loss Plot</em>
+</p>
+
+## Defend
+
+![Episode Reward Plot](./plot/defend-plot-1.png)
+
+<p align=center>
+    <em>Fig: Defend Level Episode Length & Reward Plot</em>
+</p>
+
+![Loss Plot](./plot/defend-plot-2.png)
+
+<p align=center>
+    <em>Fig: Defend Level Loss Plot</em>
+</p>
+
+## Deadly
+
+![Episode Reward Plot](./plot/deadly-plot-1.png)
+
+<p align=center>
+    <em>Fig: Deadly Level Episode Length & Reward Plot</em>
+</p>
+
+![Loss Plot](./plot/deadly-plot-2.png)
+
+<p align=center>
+    <em>Fig: Deadly Level Loss Plot</em>
+</p>
+
 ## CLI Commands:
 
 ### Basic & Defend:
