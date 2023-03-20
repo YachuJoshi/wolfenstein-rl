@@ -18,7 +18,6 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
 1. Easy → 1
 2. Medium → 2
 3. Hard → 3
-4. Insane → 4
 
 ## Results:
 
