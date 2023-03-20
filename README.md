@@ -40,7 +40,7 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
 
 ## Plots:
 
-## Basic
+### Basic
 
 ![Episode Reward Plot](./plot/basic-plot-1.png)
 
@@ -54,7 +54,7 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
     <em>Fig: Basic Level Loss Plot</em>
 </p>
 
-## Defend
+### Defend
 
 ![Episode Reward Plot](./plot/defend-plot-1.png)
 
@@ -68,7 +68,7 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
     <em>Fig: Defend Level Loss Plot</em>
 </p>
 
-## Deadly
+### Deadly
 
 ![Episode Reward Plot](./plot/deadly-plot-1.png)
 
