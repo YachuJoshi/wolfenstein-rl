@@ -20,6 +20,32 @@ Simple implementation of **RayCasting Algorithm** integrated with _Proximal Poli
 3. Hard → 3
 4. Insane → 4
 
+## Results:
+
+### Basic Level:
+
+<p align="center">
+  <img src="./gif/basic.gif" alt="Basic Result"/>
+</p>
+
+### Defend Level:
+
+<p align="center">
+  <img src="./gif/defend.gif" alt="Defend Result"/>
+</p>
+
+### Deadly-Corridor Level w/ Sparse Reward:
+
+<p align="center">
+  <img src="./gif/deadly-sparse.gif" alt="Deadly Sparse Reward Result"/>
+</p>
+
+### Deadly-Corridor Level w/ Reward Shaping & Curriculum Learning:
+
+<p align="center">
+  <img src="./gif/deadly-final.gif" alt="Deadly Final Result"/>
+</p>
+
 ## CLI Commands:
 
 ### Basic & Defend:
