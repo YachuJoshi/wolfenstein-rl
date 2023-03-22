@@ -1,6 +1,6 @@
 # Self Learning Agent in FPS Environment - RL
 
-Simple implementation of **RayCasting Algorithm** integrated with _Proximal Policy Optimization ( PPO )_ Deep RL Learning Technique.
+Simple implementation of [Wolfenstein 3D](https://en.wikipedia.org/wiki/Wolfenstein_3D) game using _Raycasting Algorithm_ integrated with _Proximal Policy Optimization ( PPO )_ Deep Reinforcement Learning Technique.
 
 ## Levels:
 
