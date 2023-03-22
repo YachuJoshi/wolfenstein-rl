@@ -104,7 +104,6 @@ python3 ./main.py --level { basic | defend } --test --steps { steps }
 1. Easy
 2. Medium
 3. Hard
-4. Insane
 
 ### 1. Train Model w/o Curriculum Learning:
 
